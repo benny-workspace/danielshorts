@@ -22,9 +22,14 @@ export function createApiApp(): Express {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
+  // The client is served from the same origin, so no cross-origin access is
+  // required. `origin: false` sends no CORS headers, which — combined with
+  // credentials — stops another site from reading a signed-in reader's orders
+  // from their browser. Set APP_URL only if you genuinely serve the client
+  // from a different host.
   app.use(
     cors({
-      origin: env.appUrl || true,
+      origin: env.appUrl || false,
       credentials: true,
     }),
   );
