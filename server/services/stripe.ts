@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
-import { capabilities, env } from '../env';
-import { PRODUCTS, type ProductTier } from '../../shared/products';
+import { capabilities, env } from '../env.js';
+import { PRODUCTS, type ProductTier } from '../../shared/products.js';
 
 let client: Stripe | null = null;
 

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { SCHEMA_SQL } from './schema';
+import { SCHEMA_SQL } from './schema.js';
 import type {
   Database,
   Order,
@@ -7,10 +7,10 @@ import type {
   QuizAttempt,
   SavedFavorite,
   User,
-} from './types';
-import type { ArchetypeId } from '../../shared/archetypes';
-import type { ProductTier } from '../../shared/products';
-import { log } from '../env';
+} from './types.js';
+import type { ArchetypeId } from '../../shared/archetypes.js';
+import type { ProductTier } from '../../shared/products.js';
+import { log } from '../env.js';
 
 type Row = Record<string, unknown>;
 

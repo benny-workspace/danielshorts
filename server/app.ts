@@ -1,15 +1,15 @@
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
-import { env } from './env';
-import { HttpError } from './lib/http';
-import { aiRouter } from './routes/ai';
-import { authRouter } from './routes/auth';
-import { checkoutRouter } from './routes/checkout';
-import { configRouter } from './routes/config';
-import { downloadRouter } from './routes/download';
-import { quizRouter } from './routes/quiz';
-import { userRouter } from './routes/user';
-import { webhookRouter } from './routes/webhooks';
+import { env } from './env.js';
+import { HttpError } from './lib/http.js';
+import { aiRouter } from './routes/ai.js';
+import { authRouter } from './routes/auth.js';
+import { checkoutRouter } from './routes/checkout.js';
+import { configRouter } from './routes/config.js';
+import { downloadRouter } from './routes/download.js';
+import { quizRouter } from './routes/quiz.js';
+import { userRouter } from './routes/user.js';
+import { webhookRouter } from './routes/webhooks.js';
 
 /**
  * Builds the API. Deliberately free of static-file and Vite concerns so the

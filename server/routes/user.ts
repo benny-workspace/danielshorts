@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { getArchetype, isArchetypeId } from '../../shared/archetypes';
-import { PRODUCTS } from '../../shared/products';
-import { getDb, type Order } from '../db';
-import { asyncRoute, badRequest, rateLimit } from '../lib/http';
-import { currentUser } from './auth';
+import { getArchetype, isArchetypeId } from '../../shared/archetypes.js';
+import { PRODUCTS } from '../../shared/products.js';
+import { getDb, type Order } from '../db/index.js';
+import { asyncRoute, badRequest, rateLimit } from '../lib/http.js';
+import { currentUser } from './auth.js';
 
 export const userRouter = Router();
 

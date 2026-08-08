@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes';
-import { isProductTier, PRODUCTS } from '../../shared/products';
-import { scoreQuiz } from '../../shared/questions';
-import { getDb } from '../db';
-import { capabilities, env, log, resolveAppUrl } from '../env';
-import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http';
-import { buildPaymentLinkUrl, createCheckoutSession } from '../services/stripe';
+import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
+import { isProductTier, PRODUCTS } from '../../shared/products.js';
+import { scoreQuiz } from '../../shared/questions.js';
+import { getDb } from '../db/index.js';
+import { capabilities, env, log, resolveAppUrl } from '../env.js';
+import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http.js';
+import { buildPaymentLinkUrl, createCheckoutSession } from '../services/stripe.js';
 
 export const checkoutRouter = Router();
 

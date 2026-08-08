@@ -1,5 +1,5 @@
-import { capabilities, env, log } from '../env';
-import { formatPrice, PRODUCTS, type ProductTier } from '../../shared/products';
+import { capabilities, env, log } from '../env.js';
+import { formatPrice, PRODUCTS, type ProductTier } from '../../shared/products.js';
 
 interface SendArgs {
   to: string;

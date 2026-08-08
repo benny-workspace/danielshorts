@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { getDb } from '../db';
-import { asyncRoute, rateLimit } from '../lib/http';
-import { verifyDownloadToken } from '../lib/tokens';
-import { renderOrderPdf } from '../services/fulfillment';
+import { getDb } from '../db/index.js';
+import { asyncRoute, rateLimit } from '../lib/http.js';
+import { verifyDownloadToken } from '../lib/tokens.js';
+import { renderOrderPdf } from '../services/fulfillment.js';
 
 export const downloadRouter = Router();
 

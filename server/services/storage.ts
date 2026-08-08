@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { env, log } from '../env';
+import { env, log } from '../env.js';
 
 export interface StoredFile {
   storageKey: string;

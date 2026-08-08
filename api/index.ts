@@ -5,6 +5,6 @@
  * the original URL. Static assets are served by Vercel's CDN from dist/, so
  * this function only ever handles API traffic.
  */
-import { createApiApp } from '../server/app';
+import { createApiApp } from '../server/app.js';
 
 export default createApiApp();

@@ -1,6 +1,6 @@
-import type { ArchetypeId } from '../../shared/archetypes';
-import type { ProductTier } from '../../shared/products';
-import type { BlueprintContent } from '../services/blueprint';
+import type { ArchetypeId } from '../../shared/archetypes.js';
+import type { ProductTier } from '../../shared/products.js';
+import type { BlueprintContent } from '../services/blueprint.js';
 
 export interface User {
   id: string;

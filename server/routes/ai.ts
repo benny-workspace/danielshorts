@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes';
-import { scoreQuiz } from '../../shared/questions';
-import { getDb } from '../db';
-import { capabilities } from '../env';
-import { asyncRoute, optionalString, rateLimit } from '../lib/http';
-import type { BlueprintContent } from '../services/blueprint';
-import { composeBlueprint } from '../services/gemini';
-import { verifyDownloadToken } from '../lib/tokens';
+import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
+import { scoreQuiz } from '../../shared/questions.js';
+import { getDb } from '../db/index.js';
+import { capabilities } from '../env.js';
+import { asyncRoute, optionalString, rateLimit } from '../lib/http.js';
+import type { BlueprintContent } from '../services/blueprint.js';
+import { composeBlueprint } from '../services/gemini.js';
+import { verifyDownloadToken } from '../lib/tokens.js';
 
 export const aiRouter = Router();
 

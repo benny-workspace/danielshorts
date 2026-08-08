@@ -1,4 +1,4 @@
-import type { ArchetypeId } from './archetypes';
+import type { ArchetypeId } from './archetypes.js';
 
 export interface Compatibility {
   percent: number;

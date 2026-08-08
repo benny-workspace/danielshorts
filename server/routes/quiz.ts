@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { getArchetype, isArchetypeId, type ArchetypeId } from '../../shared/archetypes';
-import { scoreQuiz } from '../../shared/questions';
-import { getDb } from '../db';
-import { resolveAppUrl } from '../env';
-import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http';
-import { sendResultEmail } from '../services/email';
+import { getArchetype, isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
+import { scoreQuiz } from '../../shared/questions.js';
+import { getDb } from '../db/index.js';
+import { resolveAppUrl } from '../env.js';
+import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http.js';
+import { sendResultEmail } from '../services/email.js';
 
 export const quizRouter = Router();
 

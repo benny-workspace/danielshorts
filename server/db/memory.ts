@@ -7,8 +7,8 @@ import type {
   QuizAttempt,
   SavedFavorite,
   User,
-} from './types';
-import type { ArchetypeId } from '../../shared/archetypes';
+} from './types.js';
+import type { ArchetypeId } from '../../shared/archetypes.js';
 
 interface Snapshot {
   users: User[];

@@ -1,13 +1,13 @@
-import { getArchetype, isArchetypeId, type ArchetypeId } from '../../shared/archetypes';
-import { PRODUCTS, type ProductTier } from '../../shared/products';
-import { getDb, type Order } from '../db';
-import { log } from '../env';
-import { signDownloadToken } from '../lib/tokens';
-import type { BlueprintContent } from './blueprint';
-import { sendFulfillmentEmail } from './email';
-import { composeBlueprint } from './gemini';
-import { renderBlueprintPdf } from './pdf';
-import { persistFile } from './storage';
+import { getArchetype, isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
+import { PRODUCTS, type ProductTier } from '../../shared/products.js';
+import { getDb, type Order } from '../db/index.js';
+import { log } from '../env.js';
+import { signDownloadToken } from '../lib/tokens.js';
+import type { BlueprintContent } from './blueprint.js';
+import { sendFulfillmentEmail } from './email.js';
+import { composeBlueprint } from './gemini.js';
+import { renderBlueprintPdf } from './pdf.js';
+import { persistFile } from './storage.js';
 
 export interface FulfillmentResult {
   order: Order;

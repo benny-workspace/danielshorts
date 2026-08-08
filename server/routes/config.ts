@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { PRODUCTS, PRODUCT_TIERS } from '../../shared/products';
-import { getActiveDriver, getDb } from '../db';
-import { capabilities, env } from '../env';
-import { asyncRoute } from '../lib/http';
+import { PRODUCTS, PRODUCT_TIERS } from '../../shared/products.js';
+import { getActiveDriver, getDb } from '../db/index.js';
+import { capabilities, env } from '../env.js';
+import { asyncRoute } from '../lib/http.js';
 
 export const configRouter = Router();
 

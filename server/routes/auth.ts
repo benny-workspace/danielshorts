@@ -1,15 +1,15 @@
 import { Router, type Request } from 'express';
-import { getDb } from '../db';
-import { capabilities, env, resolveAppUrl } from '../env';
-import { asyncRoute, parseEmail, rateLimit } from '../lib/http';
-import { sendMagicLinkEmail } from '../services/email';
+import { getDb } from '../db/index.js';
+import { capabilities, env, resolveAppUrl } from '../env.js';
+import { asyncRoute, parseEmail, rateLimit } from '../lib/http.js';
+import { sendMagicLinkEmail } from '../services/email.js';
 import {
   SESSION_COOKIE,
   signMagicLinkToken,
   signSessionToken,
   verifyMagicLinkToken,
   verifySessionToken,
-} from '../lib/tokens';
+} from '../lib/tokens.js';
 
 export const authRouter = Router();
 
