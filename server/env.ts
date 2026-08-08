@@ -14,8 +14,15 @@ function bool(name: string, fallback = false): boolean {
 export const env = {
   nodeEnv: str('NODE_ENV', 'development'),
   port: Number(str('PORT', '3000')),
-  /** Public origin used for redirects, download links and magic links. */
-  appUrl: str('APP_URL', str('VERCEL_URL') ? `https://${str('VERCEL_URL')}` : ''),
+  /**
+   * Explicit public origin. Left empty unless APP_URL is set — deliberately
+   * NOT derived from VERCEL_URL, which is the per-deployment hostname
+   * (danielshorts-kq5vcl1f2-….vercel.app) rather than the stable domain, and
+   * would bake a throwaway host into emailed download links.
+   */
+  appUrl: str('APP_URL'),
+  /** Vercel's stable production domain, used as a last-resort fallback. */
+  productionUrl: str('VERCEL_PROJECT_PRODUCTION_URL'),
 
   stripeSecretKey: str('STRIPE_SECRET_KEY'),
   stripeWebhookSecret: str('STRIPE_WEBHOOK_SECRET'),
@@ -77,13 +84,24 @@ export const capabilities = {
   },
 };
 
-export function resolveAppUrl(req?: { protocol?: string; get?(h: string): string | undefined }): string {
+/**
+ * The origin to build user-facing links from, most-specific first: an explicit
+ * APP_URL, then the host the request actually arrived on (so links match the
+ * domain the reader is using), then Vercel's stable production domain.
+ */
+export function resolveAppUrl(req?: {
+  protocol?: string;
+  get?(h: string): string | undefined;
+}): string {
   if (env.appUrl) return env.appUrl.replace(/\/$/, '');
+
   const host = req?.get?.('host');
   if (host) {
-    const proto = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
-    return `${proto}://${host}`;
+    const local = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host);
+    return `${local ? 'http' : 'https'}://${host}`;
   }
+
+  if (env.productionUrl) return `https://${env.productionUrl}`;
   return `http://localhost:${env.port}`;
 }
 
