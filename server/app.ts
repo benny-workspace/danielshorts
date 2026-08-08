@@ -22,17 +22,17 @@ export function createApiApp(): Express {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
-  // The client is served from the same origin, so no cross-origin access is
-  // required. `origin: false` sends no CORS headers, which — combined with
-  // credentials — stops another site from reading a signed-in reader's orders
-  // from their browser. Set APP_URL only if you genuinely serve the client
-  // from a different host.
-  app.use(
-    cors({
-      origin: env.appUrl || false,
-      credentials: true,
-    }),
-  );
+  // The client is served from the same origin, and same-origin requests never
+  // consult CORS — so by default no CORS middleware is mounted at all. That
+  // keeps another site from reading a signed-in reader's orders out of their
+  // browser. Note `cors({ origin: false })` would NOT do this: the package
+  // treats any falsy origin as "allow *".
+  //
+  // Setting APP_URL opts into CORS for exactly that one origin, for the case
+  // where the client genuinely lives on a different host.
+  if (env.appUrl) {
+    app.use(cors({ origin: env.appUrl, credentials: true }));
+  }
 
   // Mounted before the JSON parser: Stripe signatures are computed over the
   // raw bytes, which a parsed body would destroy.
