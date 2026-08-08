@@ -1,0 +1,6 @@
+{
+  "name": "K-Drama Love Interest Quiz & Funnel",
+  "description": "A mobile-first, dreamy K-drama personality quiz and digital product funnel with archetype scoring and romantic aesthetic design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
