@@ -1,4 +1,4 @@
-import type { ArchetypeId } from '../../shared/archetypes';
+import type { ArchetypeId } from '../../shared/archetypes.js';
 
 /** The structured document that both Gemini and the fallback writer produce. */
 export interface BlueprintContent {

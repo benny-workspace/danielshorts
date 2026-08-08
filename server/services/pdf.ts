@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import type { BlueprintContent } from './blueprint';
+import type { BlueprintContent } from './blueprint.js';
 
 const PAGE = { width: 595.28, height: 841.89 }; // A4 portrait, points
 const MARGIN = 62;

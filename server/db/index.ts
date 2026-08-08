@@ -1,8 +1,8 @@
-import { capabilities, env, log } from '../env';
-import { MemoryDatabase } from './memory';
-import type { Database } from './types';
+import { capabilities, env, log } from '../env.js';
+import { MemoryDatabase } from './memory.js';
+import type { Database } from './types.js';
 
-export * from './types';
+export * from './types.js';
 
 let instance: Database | null = null;
 let activeDriver: 'postgres' | 'memory' = 'memory';
@@ -17,7 +17,7 @@ export async function getDb(): Promise<Database> {
 
   if (capabilities.postgres) {
     try {
-      const { PostgresDatabase } = await import('./postgres');
+      const { PostgresDatabase } = await import('./postgres.js');
       const pg = new PostgresDatabase(env.databaseUrl);
       await pg.ready();
       instance = pg;

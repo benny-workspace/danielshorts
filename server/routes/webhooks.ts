@@ -1,12 +1,12 @@
 import { Router, raw } from 'express';
 import type Stripe from 'stripe';
-import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes';
-import { isProductTier, PRODUCTS, type ProductTier } from '../../shared/products';
-import { getDb, type Order } from '../db';
-import { capabilities, log, resolveAppUrl } from '../env';
-import { asyncRoute } from '../lib/http';
-import { fulfillOrder } from '../services/fulfillment';
-import { constructWebhookEvent } from '../services/stripe';
+import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
+import { isProductTier, PRODUCTS, type ProductTier } from '../../shared/products.js';
+import { getDb, type Order } from '../db/index.js';
+import { capabilities, log, resolveAppUrl } from '../env.js';
+import { asyncRoute } from '../lib/http.js';
+import { fulfillOrder } from '../services/fulfillment.js';
+import { constructWebhookEvent } from '../services/stripe.js';
 
 export const webhookRouter = Router();
 

@@ -12,8 +12,8 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
-import { createApiApp } from './server/app';
-import { env } from './server/env';
+import { createApiApp } from './server/app.js';
+import { env } from './server/env.js';
 
 const isProduction = env.nodeEnv === 'production';
 const DIST_DIR = path.resolve(process.cwd(), 'dist');

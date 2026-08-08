@@ -1,8 +1,8 @@
-import { ARCHETYPES, getArchetype } from '../../shared/archetypes';
-import { getCompatibility } from '../../shared/compatibility';
-import { QUESTIONS } from '../../shared/questions';
-import { capabilities, env, log } from '../env';
-import type { BlueprintContent, BlueprintRequest } from './blueprint';
+import { ARCHETYPES, getArchetype } from '../../shared/archetypes.js';
+import { getCompatibility } from '../../shared/compatibility.js';
+import { QUESTIONS } from '../../shared/questions.js';
+import { capabilities, env, log } from '../env.js';
+import type { BlueprintContent, BlueprintRequest } from './blueprint.js';
 
 const RESPONSE_SCHEMA = {
   type: 'object',
