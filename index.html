@@ -182,15 +182,46 @@
 
 
       <!-- STEP 2: QUIZ CARD VIEW (Hidden by default) -->
-      <section id="quiz-view" class="hidden glass-card rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        <!-- Progress Header -->
+      <section id="quiz-view" class="hidden glass-card rounded-2xl p-6 sm:p-8 shadow-sm space-y-5 relative">
+        <!-- Progress Header & Question Summary Controls -->
         <div class="space-y-2">
           <div class="flex justify-between items-center text-xs text-stone-500 font-medium">
-            <span id="quiz-progress-text">Question 1 of 7</span>
+            <div class="flex items-center gap-2">
+              <span id="quiz-progress-text" class="font-semibold text-stone-700">Question 1 of 7</span>
+              <!-- Toggle Choice History Button -->
+              <button 
+                id="btn-toggle-choices-summary" 
+                onclick="toggleChoicesSummaryDrawer()" 
+                title="View Choice History"
+                class="px-2.5 py-0.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/90 text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1 shadow-2xs">
+                <span>📋 Choices</span>
+                <span id="choices-summary-badge" class="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0/7</span>
+              </button>
+            </div>
             <span id="quiz-progress-percent" class="text-rose-600 font-semibold">14%</span>
           </div>
+
           <div class="w-full h-2 bg-rose-100 rounded-full overflow-hidden">
             <div id="quiz-progress-bar" class="h-full bg-rose-500 transition-all duration-300 rounded-full" style="width: 14%;"></div>
+          </div>
+
+          <!-- Interactive Step Indicator Dots -->
+          <div id="quiz-step-dots" class="flex items-center justify-between pt-1">
+            <!-- Dynamically populated in JS -->
+          </div>
+
+          <!-- Collapsible Choice History Drawer -->
+          <div id="quiz-choices-drawer" class="hidden mt-2 p-3.5 rounded-xl bg-rose-50/70 border border-rose-100 text-left space-y-2 text-xs shadow-2xs">
+            <div class="flex items-center justify-between pb-1.5 border-b border-rose-200/60 text-stone-700 font-semibold">
+              <span class="flex items-center gap-1.5">
+                <span>📋 Your Choices Summary</span>
+                <span class="text-[10px] text-stone-400 font-normal">(Click any choice to jump back)</span>
+              </span>
+              <button onclick="toggleChoicesSummaryDrawer()" class="text-stone-400 hover:text-stone-600 p-0.5">✕</button>
+            </div>
+            <div id="quiz-choices-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              <!-- Dynamically populated in JS -->
+            </div>
           </div>
         </div>
 
@@ -206,18 +237,24 @@
         </div>
 
         <!-- Quiz Navigation Controls -->
-        <div class="flex items-center justify-between pt-2">
+        <div class="flex items-center justify-between pt-2 border-t border-stone-100">
           <button 
             id="btn-quiz-back" 
             onclick="prevQuestion()"
-            class="text-xs font-medium text-stone-500 hover:text-stone-800 py-2 px-3 rounded-lg border border-stone-200 bg-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+            class="text-xs font-medium text-stone-600 hover:text-stone-900 py-2 px-3.5 rounded-lg border border-stone-200 bg-white hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer">
             ← Back
           </button>
+
+          <!-- Mobile Swipe Hint -->
+          <span class="text-[10px] text-stone-400 sm:hidden flex items-center gap-1">
+            <span>↔ Swipe left/right</span>
+          </span>
+
           <button 
             id="btn-quiz-next" 
             onclick="nextQuestion()" 
             disabled
-            class="text-xs font-semibold text-white py-2.5 px-5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all">
+            class="text-xs font-semibold text-white py-2.5 px-5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer">
             Continue →
           </button>
         </div>
@@ -927,6 +964,7 @@
         quizView.classList.remove('hidden');
         currentQuestionIndex = 0;
         userAnswers = [];
+        setupQuizSwipeGestures();
         renderQuestion();
       }
 
@@ -943,6 +981,12 @@
         progressText.textContent = `Question ${currentNum} of ${total}`;
         progressPercent.textContent = `${pct}%`;
         progressBar.style.width = `${pct}%`;
+
+        // Render Step Dots & Choices Drawer
+        renderQuizStepDots();
+        if (choicesDrawerOpen) {
+          renderChoicesSummaryList();
+        }
 
         // Back button status
         btnQuizBack.disabled = (currentQuestionIndex === 0);
@@ -976,6 +1020,170 @@
         }
       }
 
+      // Interactive Progress Step Dots
+      function renderQuizStepDots() {
+        const dotsContainer = document.getElementById('quiz-step-dots');
+        if (!dotsContainer) return;
+
+        dotsContainer.innerHTML = QUESTIONS.map((q, idx) => {
+          const isCurrent = idx === currentQuestionIndex;
+          const answerKey = userAnswers[idx];
+          const isAnswered = answerKey !== undefined && answerKey !== null;
+          const archetypeIcon = isAnswered && ARCHETYPES[answerKey] ? ARCHETYPES[answerKey].icon : '';
+
+          let dotClass = "w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all cursor-pointer ";
+          if (isCurrent) {
+            dotClass += "bg-rose-600 text-white ring-2 ring-rose-300 shadow-xs scale-110";
+          } else if (isAnswered) {
+            dotClass += "bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200";
+          } else {
+            dotClass += "bg-stone-100 text-stone-400 border border-stone-200 hover:bg-stone-200";
+          }
+
+          return `
+            <button 
+              onclick="jumpToQuestion(${idx})" 
+              title="Question ${idx + 1}: ${q.question.substring(0, 30)}..."
+              class="${dotClass}">
+              ${isAnswered ? (archetypeIcon || '✓') : (idx + 1)}
+            </button>
+          `;
+        }).join('');
+
+        // Update badge count
+        const badge = document.getElementById('choices-summary-badge');
+        const answeredCount = userAnswers.filter(a => a !== undefined && a !== null).length;
+        if (badge) badge.textContent = `${answeredCount}/${QUESTIONS.length}`;
+      }
+
+      function jumpToQuestion(idx) {
+        currentQuestionIndex = idx;
+        renderQuestion();
+      }
+
+      let choicesDrawerOpen = false;
+      function toggleChoicesSummaryDrawer() {
+        const drawer = document.getElementById('quiz-choices-drawer');
+        if (!drawer) return;
+        choicesDrawerOpen = !choicesDrawerOpen;
+        if (choicesDrawerOpen) {
+          renderChoicesSummaryList();
+          drawer.classList.remove('hidden');
+          if (typeof gsap !== 'undefined') {
+            gsap.fromTo(drawer, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.25 });
+          }
+        } else {
+          drawer.classList.add('hidden');
+        }
+      }
+
+      function renderChoicesSummaryList() {
+        const list = document.getElementById('quiz-choices-list');
+        if (!list) return;
+
+        const items = QUESTIONS.map((q, idx) => {
+          const answerKey = userAnswers[idx];
+          const isAnswered = answerKey !== undefined && answerKey !== null;
+          const arch = isAnswered ? ARCHETYPES[answerKey] : null;
+
+          if (!isAnswered) {
+            return `
+              <div onclick="jumpToQuestion(${idx})" class="p-2 rounded-lg bg-white/60 border border-stone-200/60 flex items-center justify-between text-stone-400 cursor-pointer hover:bg-white transition-all">
+                <span class="font-medium text-[11px]">Q${idx + 1}: ${q.question.substring(0, 38)}...</span>
+                <span class="text-[10px] italic">Not answered</span>
+              </div>
+            `;
+          }
+
+          const selectedOpt = q.options.find(o => o.archetype === answerKey);
+          const optText = selectedOpt ? selectedOpt.text : 'Selected choice';
+
+          return `
+            <div onclick="jumpToQuestion(${idx})" class="p-2 rounded-lg bg-white border border-rose-200 flex items-center justify-between gap-2 cursor-pointer hover:border-rose-400 transition-all shadow-2xs">
+              <div class="text-left space-y-0.5">
+                <div class="font-bold text-stone-900 text-[11px] flex items-center gap-1.5">
+                  <span class="text-rose-600 font-extrabold">Q${idx + 1}:</span>
+                  <span class="text-stone-700 font-medium truncate max-w-[200px] sm:max-w-[280px]">${optText}</span>
+                </div>
+                <div class="text-[10px] text-rose-700 font-semibold flex items-center gap-1">
+                  <span>${arch ? arch.icon : '✨'}</span>
+                  <span>${arch ? arch.title : answerKey}</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold text-rose-600 hover:underline shrink-0">Edit →</span>
+            </div>
+          `;
+        }).join('');
+
+        list.innerHTML = items;
+      }
+
+      // Swipe Gesture Navigation for Quiz Question Cards on Mobile/Touch
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchEndX = 0;
+      let touchEndY = 0;
+
+      function setupQuizSwipeGestures() {
+        const quizViewElem = document.getElementById('quiz-view');
+        if (!quizViewElem || quizViewElem.dataset.swipeInitialized) return;
+        quizViewElem.dataset.swipeInitialized = "true";
+
+        quizViewElem.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+          touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        quizViewElem.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          touchEndY = e.changedTouches[0].screenY;
+          handleQuizSwipe();
+        }, { passive: true });
+      }
+
+      function handleQuizSwipe() {
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // Distance threshold 45px and mostly horizontal
+        if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+          if (deltaX < 0) {
+            // Swipe Left -> Next Question
+            if (selectedOptionForCurrentQ !== null) {
+              animateQuizTransition('left', () => nextQuestion());
+            } else {
+              showToast('Select an answer to swipe next 🌸');
+            }
+          } else if (deltaX > 0) {
+            // Swipe Right -> Previous Question
+            if (currentQuestionIndex > 0) {
+              animateQuizTransition('right', () => prevQuestion());
+            }
+          }
+        }
+      }
+
+      function animateQuizTransition(direction, callback) {
+        const optionsElem = document.getElementById('options-container');
+        const qTextElem = document.getElementById('question-text');
+
+        if (typeof gsap !== 'undefined' && optionsElem) {
+          const xOut = direction === 'left' ? -25 : 25;
+          const xIn = direction === 'left' ? 25 : -25;
+          gsap.to([qTextElem, optionsElem], {
+            x: xOut,
+            opacity: 0,
+            duration: 0.12,
+            onComplete: () => {
+              callback();
+              gsap.fromTo([qTextElem, optionsElem], { x: xIn, opacity: 0 }, { x: 0, opacity: 1, duration: 0.22, ease: 'power2.out' });
+            }
+          });
+        } else {
+          callback();
+        }
+      }
+
       // Select Option
       function selectOption(archetypeKey, element) {
         selectedOptionForCurrentQ = archetypeKey;
@@ -1000,6 +1208,10 @@
         check.textContent = '✓';
 
         btnQuizNext.disabled = false;
+        renderQuizStepDots();
+        if (choicesDrawerOpen) {
+          renderChoicesSummaryList();
+        }
       }
 
       // Next Question
@@ -1468,6 +1680,40 @@
         ctx.fillText(line, x, y);
       }
 
+      // K-Drama Archetype Compatibility Matrix
+      const COMPATIBILITY_MATRIX = {
+        best_friend: {
+          heir: { percent: 88, label: "Slow-Burn Comfort vs High-Stakes Wealth", desc: "Your quiet loyalty softens the heir's guarded exterior, giving them a comforting sanctuary away from high-stakes pressures." },
+          leader: { percent: 95, label: "Unshakeable Moral Alliance", desc: "A deeply harmonious partnership built on mutual trust, shared integrity, and quiet emotional safety." },
+          artist: { percent: 92, label: "Gentle Soulmates", desc: "You nurture the artist's quiet inner world with patient warmth, sharing sunlit afternoons filled with unspoken understanding." },
+          rival: { percent: 85, label: "Warm Harbor for a Fiery Spirit", desc: "Playful teasing turns into deep trust as your steady loyalty becomes their ultimate safety net when challenges arise." }
+        },
+        heir: {
+          best_friend: { percent: 88, label: "High-Stakes Romance & Safe Harbor", desc: "Behind your grand gestures lies a secret longing for the simple, honest comfort only a childhood companion provides." },
+          leader: { percent: 90, label: "Power Couple Dynamic", desc: "Rivaling ideals clash with electric intensity before transforming into a formidable, highly respected union." },
+          artist: { percent: 94, label: "Private Sanctuary Arc", desc: "Your vast resources create a quiet haven where the gentle artist can create freely without world interruption." },
+          rival: { percent: 96, label: "Intoxicating Spark & High Chemistry", desc: "Sharp wits and fierce pride collide continuously, creating irresistible screen chemistry and fierce protection." }
+        },
+        leader: {
+          best_friend: { percent: 95, label: "Enduring Support & Loyalty", desc: "Your courageous public stance is anchored by steady, quiet private support, creating an unbreakable romantic foundation." },
+          heir: { percent: 90, label: "Principles vs Power", desc: "A compelling dynamic where moral courage challenges aristocratic influence, eventually forging a legendary partnership." },
+          artist: { percent: 89, label: "Warm Shield & Creative Muse", desc: "You defend the gentle artist's delicate spirit from harsh societal pressures, inspiring their greatest creative works." },
+          rival: { percent: 93, label: "Spirited Debates & Growth", desc: "Two passionate minds constantly push each other to excel through witty intellectual sparring and fierce loyalty." }
+        },
+        artist: {
+          best_friend: { percent: 92, label: "Soulful Connection & Peace", desc: "Shared quietude and gentle observation allow romance to bloom naturally without noise or superficial drama." },
+          heir: { percent: 94, label: "Hidden Refuge & Vulnerability", desc: "Your sunlit studio offers the intense heir an enchanting escape where they can drop their heavy armor." },
+          leader: { percent: 89, label: "Creative Inspiration & Shield", desc: "Your poetic depth softens the leader's intense sense of duty, giving them a comforting space to recharge." },
+          rival: { percent: 91, label: "Contrast & Color", desc: "Bold, competitive energy meets quiet artistic sensitivity, creating a rich contrast where opposites inspire each other." }
+        },
+        rival: {
+          heir: { percent: 96, label: "Unstoppable Sparks & High Drama", desc: "Two proud, sharp-witted personalities collide with electric energy, masking deep secret protection behind clever banter." },
+          leader: { percent: 93, label: "Witty Debates & Mutual Respect", desc: "Sparkling intellectual friction transforms into profound mutual admiration as you both champion causes together." },
+          best_friend: { percent: 85, label: "Banter to Warmth", desc: "Your competitive teasing melts into deep affection when you realize their quiet presence is your favorite place to be." },
+          artist: { percent: 91, label: "Fiery Spark meets Quiet Depth", desc: "Your vibrant, teasing energy challenges the artist to step into the spotlight while they teach you the beauty of quiet moments." }
+        }
+      };
+
       // Toggle Other Archetypes Accordion Drawer
       let accordionOpen = false;
       function toggleOtherArchetypesAccordion() {
@@ -1481,26 +1727,57 @@
           drawer.classList.remove('hidden');
           chevron.style.transform = 'rotate(180deg)';
 
-          // Find current winning title
-          const currentTitle = document.getElementById('result-archetype-title').textContent.trim();
+          // Find current winning archetype key
+          const winningKey = currentWinningKey || 'best_friend';
 
-          // Render other 4 archetypes
+          // Render other 4 archetypes with Compatibility Meter
           listContainer.innerHTML = '';
           for (const key in ARCHETYPES) {
+            if (key === winningKey) continue;
+
             const arch = ARCHETYPES[key];
-            if (arch.title === currentTitle) continue;
+            const comp = (COMPATIBILITY_MATRIX[winningKey] && COMPATIBILITY_MATRIX[winningKey][key]) || {
+              percent: 90,
+              label: "Captivating K-Drama Synergy",
+              desc: "A rich storytelling dynamic filled with emotional resonance and chemistry."
+            };
 
             const card = document.createElement('div');
-            card.className = 'p-3.5 rounded-xl bg-white/90 border border-rose-200/80 hover:border-rose-300 transition-all shadow-2xs space-y-2';
+            card.className = 'p-4 rounded-xl bg-white/95 border border-rose-200/90 hover:border-rose-300 transition-all shadow-2xs space-y-3';
             card.innerHTML = `
-              <div class="flex items-center gap-2">
-                <span class="text-xl p-1 bg-rose-50 rounded-full shrink-0">${arch.icon}</span>
-                <div>
-                  <h5 class="font-bold text-stone-900 text-xs sm:text-sm leading-snug">${arch.title}</h5>
-                  <span class="text-[10px] text-rose-700 font-semibold uppercase tracking-wider block">${arch.tag.split(':')[1] || arch.tag}</span>
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-xl p-1.5 bg-rose-50 rounded-full shrink-0 shadow-2xs">${arch.icon}</span>
+                  <div>
+                    <h5 class="font-bold text-stone-900 text-xs sm:text-sm leading-snug">${arch.title}</h5>
+                    <span class="text-[10px] text-rose-700 font-semibold uppercase tracking-wider block">${arch.tag.split(':')[1] || arch.tag}</span>
+                  </div>
                 </div>
+                <span class="px-2 py-0.5 rounded-full bg-rose-100/90 text-rose-800 text-[10px] font-bold shrink-0 border border-rose-200">
+                  ${comp.percent}% Match
+                </span>
               </div>
+
               <p class="text-[11px] text-stone-600 leading-relaxed">${arch.desc}</p>
+
+              <!-- Compatibility Meter Box -->
+              <div class="p-2.5 rounded-lg bg-stone-50 border border-stone-200/60 space-y-1.5 text-left">
+                <div class="flex items-center justify-between text-[10px] font-bold text-stone-700">
+                  <span class="flex items-center gap-1 text-rose-700">
+                    <span>💖 Compatibility Meter</span>
+                    <span class="text-stone-400 font-normal">vs Your Result</span>
+                  </span>
+                  <span class="text-rose-600 font-extrabold">${comp.percent}% Synergy</span>
+                </div>
+
+                <!-- Animated Compatibility Meter Bar -->
+                <div class="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600 rounded-full transition-all duration-500" style="width: ${comp.percent}%;"></div>
+                </div>
+
+                <div class="text-[10px] font-semibold text-stone-800">✨ Dynamic: ${comp.label}</div>
+                <p class="text-[10px] text-stone-500 leading-normal italic">${comp.desc}</p>
+              </div>
             `;
             listContainer.appendChild(card);
           }
