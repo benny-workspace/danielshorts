@@ -223,7 +223,7 @@ Add this when you start caring about customer records.
 4. Add to Vercel as `DATABASE_URL`
 5. Redeploy
 
-The schema (`server/db/schema.sql`) applies itself on first boot — no migration
+The schema (`server/db/schema.ts`) applies itself on first boot — no migration
 step. It creates `users`, `quiz_attempts`, `orders`, and `saved_favorites`, with
 row-level security on and no public policies, since all access goes through the
 server.

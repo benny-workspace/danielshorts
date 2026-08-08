@@ -1,7 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
+import { SCHEMA_SQL } from './schema';
 import type {
   Database,
   Order,
@@ -13,25 +11,6 @@ import type {
 import type { ArchetypeId } from '../../shared/archetypes';
 import type { ProductTier } from '../../shared/products';
 import { log } from '../env';
-
-const SCHEMA_FALLBACK_PATHS = [
-  // tsx / vite-node: resolve next to this file.
-  (() => {
-    try {
-      return path.join(path.dirname(fileURLToPath(import.meta.url)), 'schema.sql');
-    } catch {
-      return '';
-    }
-  })(),
-  path.resolve(process.cwd(), 'server/db/schema.sql'),
-];
-
-function readSchema(): string {
-  for (const candidate of SCHEMA_FALLBACK_PATHS) {
-    if (candidate && fs.existsSync(candidate)) return fs.readFileSync(candidate, 'utf8');
-  }
-  throw new Error('server/db/schema.sql not found');
-}
 
 type Row = Record<string, unknown>;
 
@@ -113,7 +92,7 @@ export class PostgresDatabase implements Database {
   ready(): Promise<void> {
     if (!this.migrated) {
       this.migrated = this.pool
-        .query(readSchema())
+        .query(SCHEMA_SQL)
         .then(() => log('postgres schema ready'))
         .catch((error) => {
           this.migrated = null;

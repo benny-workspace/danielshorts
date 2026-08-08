@@ -1,6 +1,12 @@
--- K-Drama Dreams schema.
--- Applied automatically on first boot when DATABASE_URL is set; safe to re-run.
-
+/**
+ * K-Drama Dreams schema.
+ *
+ * Applied automatically on first boot when DATABASE_URL is set, and safe to
+ * re-run. Kept as a TypeScript module rather than a .sql file on purpose: both
+ * the esbuild server bundle and Vercel's function packer trace imports, and a
+ * loose .sql read from disk at runtime would not be included in either.
+ */
+export const SCHEMA_SQL = `
 create extension if not exists "pgcrypto";
 
 create table if not exists users (
@@ -61,3 +67,4 @@ alter table users          enable row level security;
 alter table quiz_attempts  enable row level security;
 alter table orders         enable row level security;
 alter table saved_favorites enable row level security;
+`;
