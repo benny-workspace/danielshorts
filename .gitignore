@@ -4,5 +4,12 @@ dist/
 coverage/
 .DS_Store
 *.log
+
+# Local dev database and generated PDFs
+.data/
+
+# Vercel CLI
+.vercel/
+
 .env*
 !.env.example
