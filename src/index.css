@@ -1,1 +1,511 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* ==========================================================================
+   K-Drama Dreams — design tokens
+   A dark, warm, cinematic system: film-still imagery, one high-contrast serif
+   for display, a tight grotesque for UI, and a single accent that re-tints
+   itself per archetype via --accent.
+   ========================================================================== */
+
+@theme {
+  --color-ink-950: #06050a;
+  --color-ink-900: #0a0810;
+  --color-ink-800: #100d18;
+  --color-ink-700: #16121f;
+  --color-ink-600: #1e1829;
+  --color-ink-500: #2a2235;
+
+  --color-line: #2c2438;
+  --color-line-soft: #201a2b;
+
+  --color-ivory: #f3ede4;
+  --color-ivory-2: #c5bcb3;
+  --color-ivory-3: #8b8394;
+
+  --color-rose: #e2566e;
+  --color-rose-2: #ff8fa0;
+  --color-rose-deep: #a8324a;
+  --color-gold: #d4af6a;
+
+  --font-display: 'Instrument Serif', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius-card: 4px;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  /* Overridden per archetype so accents follow the reader's result. */
+  --accent: 226 86 110;
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- base ---- */
+
+* {
+  border-color: var(--color-line-soft);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-ink-950);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.3);
+  color: var(--color-ivory);
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Restrained, on-theme scrollbar rather than the default light one. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-500) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-ink-500);
+  border-radius: 99px;
+}
+
+/* ------------------------------------------------------------ typography -- */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  line-height: 0.98;
+}
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.9rem, 8.5vw, 5.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.028em;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.1rem, 5.4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+}
+
+/* Small caps label — the connective tissue of the whole layout. */
+.label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ivory-3);
+}
+
+.label-accent {
+  color: rgb(var(--accent));
+}
+
+.prose-body {
+  font-size: 1rem;
+  line-height: 1.72;
+  color: var(--color-ivory-2);
+}
+
+@media (min-width: 768px) {
+  .prose-body {
+    font-size: 1.0625rem;
+  }
+}
+
+.numeral {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------- atmospherics -- */
+
+/* Fixed film-grain plate. Kept out of the paint path with pointer-events. */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  /* Kept low: `overlay` lifts mid-tones, and anything heavier visibly washes
+     out the accent-filled buttons. */
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grain-drift 700ms steps(2, end) infinite;
+}
+
+@keyframes grain-drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-2%, 1.5%); }
+  100% { transform: translate(1.5%, -1%); }
+}
+
+/* Slow warm bloom behind content. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 12% -10%, rgb(var(--accent) / 0.13), transparent 62%),
+    radial-gradient(45rem 34rem at 92% 8%, rgba(212, 175, 106, 0.075), transparent 60%),
+    radial-gradient(50rem 40rem at 50% 108%, rgb(var(--accent) / 0.09), transparent 65%);
+  transition: background 900ms ease;
+}
+
+.vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 40%, transparent 42%, rgba(6, 5, 10, 0.72) 100%);
+}
+
+/* ---------------------------------------------------------------- rules --- */
+
+.hairline {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-line) 12%,
+    var(--color-line) 88%,
+    transparent
+  );
+}
+
+.rule-accent {
+  height: 2px;
+  width: 3rem;
+  background: rgb(var(--accent));
+}
+
+/* --------------------------------------------------------------- surface -- */
+
+.panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 40%),
+    var(--color-ink-800);
+  border: 1px solid var(--color-line-soft);
+  border-radius: var(--radius-card);
+}
+
+.panel-raised {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 45%),
+    var(--color-ink-700);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+/* ---------------------------------------------------------------- button -- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.95rem 1.6rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background-color 220ms var(--ease-out-soft),
+    color 220ms var(--ease-out-soft),
+    border-color 220ms var(--ease-out-soft),
+    transform 140ms var(--ease-out-soft),
+    box-shadow 240ms var(--ease-out-soft);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: rgb(var(--accent));
+  color: #120a0e;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: rgb(var(--accent) / 0.86);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 8px 30px -8px rgb(var(--accent) / 0.55);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-ivory);
+  border-color: var(--color-line);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: rgb(var(--accent) / 0.55);
+  background: rgb(var(--accent) / 0.07);
+}
+
+.btn-quiet {
+  background: transparent;
+  color: var(--color-ivory-3);
+  padding: 0.5rem 0.25rem;
+}
+
+.btn-quiet:hover:not(:disabled) {
+  color: var(--color-ivory);
+}
+
+/* ---------------------------------------------------------------- inputs -- */
+
+.field {
+  width: 100%;
+  background: var(--color-ink-900);
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  padding: 0.95rem 1rem;
+  font-size: 0.95rem;
+  color: var(--color-ivory);
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+.field::placeholder {
+  color: #5d5666;
+}
+
+.field:focus {
+  outline: none;
+  border-color: rgb(var(--accent) / 0.7);
+  background: var(--color-ink-800);
+}
+
+/* ------------------------------------------------------------ quiz option - */
+
+.option {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem 1.15rem 1.1rem;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--color-line-soft);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--color-ivory-2);
+  transition:
+    border-color 240ms var(--ease-out-soft),
+    background-color 240ms var(--ease-out-soft),
+    color 240ms var(--ease-out-soft),
+    transform 240ms var(--ease-out-soft);
+}
+
+/* Accent spine that grows on hover/selection. */
+.option::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  background: rgb(var(--accent));
+  transform: translateY(-50%);
+  transition: height 300ms var(--ease-out-soft);
+}
+
+@media (hover: hover) {
+  .option:hover {
+    border-color: var(--color-line);
+    background: rgba(255, 255, 255, 0.022);
+    color: var(--color-ivory);
+  }
+  .option:hover::before {
+    height: 42%;
+  }
+}
+
+.option[data-selected='true'] {
+  border-color: rgb(var(--accent) / 0.5);
+  background: rgb(var(--accent) / 0.075);
+  color: var(--color-ivory);
+}
+
+.option[data-selected='true']::before {
+  height: 100%;
+}
+
+.option-key {
+  flex-shrink: 0;
+  width: 1.6rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding-top: 0.24rem;
+  color: var(--color-ivory-3);
+  transition: color 240ms ease;
+}
+
+.option[data-selected='true'] .option-key {
+  color: rgb(var(--accent));
+}
+
+/* ------------------------------------------------------------ film frame -- */
+
+.film-frame {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--color-line);
+}
+
+/* Slow Ken-Burns push. Paused when the scene is idle. */
+.ken-burns {
+  animation: ken-burns 22s ease-out forwards;
+  transform-origin: var(--kb-origin, 50% 45%);
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.16); }
+}
+
+.subtitle-en {
+  display: inline-block;
+  max-width: 46ch;
+  padding: 0.7rem 1.05rem;
+  background: rgba(6, 5, 10, 0.74);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 2px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #f6f2ec;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
+}
+
+@media (min-width: 768px) {
+  .subtitle-en {
+    font-size: 1rem;
+    padding: 0.8rem 1.25rem;
+  }
+}
+
+.beat-dot {
+  height: 2px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.26);
+  transition: width 320ms var(--ease-out-soft), background-color 320ms ease;
+}
+
+/* ----------------------------------------------------------------- meter -- */
+
+.meter-track {
+  position: relative;
+  height: 2px;
+  background: var(--color-ink-500);
+  overflow: hidden;
+}
+
+.meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, rgb(var(--accent) / 0.55), rgb(var(--accent)));
+  transition: width 900ms var(--ease-out-soft);
+}
+
+/* ------------------------------------------------------------- reveal ----- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal[data-shown='true'] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 720ms var(--ease-out-soft),
+    transform 720ms var(--ease-out-soft);
+}
+
+/* ------------------------------------------------------------- petals ----- */
+
+.petal {
+  position: fixed;
+  top: -40px;
+  z-index: 55;
+  pointer-events: none;
+  border-radius: 60% 0 60% 0;
+  background: linear-gradient(140deg, rgb(var(--accent) / 0.95), rgba(212, 175, 106, 0.6));
+  animation: petal-fall linear forwards;
+}
+
+@keyframes petal-fall {
+  0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+  12% { opacity: 0.85; }
+  85% { opacity: 0.6; }
+  100% { transform: translateY(104vh) rotate(420deg); opacity: 0; }
+}
+
+/* --------------------------------------------------------------- motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain {
+    animation: none;
+  }
+  .ken-burns {
+    animation: none;
+    transform: scale(1.04);
+  }
+}

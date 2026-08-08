@@ -1,0 +1,75 @@
+import { Router } from 'express';
+import { PRODUCTS, PRODUCT_TIERS } from '../../shared/products';
+import { getActiveDriver, getDb } from '../db';
+import { capabilities, env } from '../env';
+import { asyncRoute } from '../lib/http';
+
+export const configRouter = Router();
+
+/**
+ * Public capability report. The client uses it to decide whether to show
+ * checkout buttons, the AI teaser, and the sign-in entry point — so a missing
+ * key degrades the UI instead of producing a dead button.
+ *
+ * Only booleans are exposed here; no key material or endpoints.
+ */
+configRouter.get('/', (_req, res) => {
+  res.json({
+    products: PRODUCT_TIERS.map((tier) => {
+      const product = PRODUCTS[tier];
+      return {
+        tier,
+        name: product.name,
+        headline: product.headline,
+        kicker: product.kicker,
+        amount: product.amount,
+        currency: product.currency,
+        description: product.description,
+        deliverables: product.deliverables,
+        badge: product.badge ?? null,
+        available: capabilities.stripe || Boolean(env.paymentLinks[tier]),
+      };
+    }),
+    features: {
+      checkout: capabilities.stripe || capabilities.paymentLinks,
+      checkoutMode: capabilities.stripe
+        ? 'stripe_checkout'
+        : capabilities.paymentLinks
+          ? 'payment_link'
+          : 'disabled',
+      fulfillmentReady: capabilities.stripeWebhooks,
+      ai: capabilities.gemini,
+      email: capabilities.email,
+      accounts: capabilities.email,
+      persistence: true,
+    },
+  });
+});
+
+/** Operational readiness, for the deploy checklist and uptime pings. */
+configRouter.get(
+  '/health',
+  asyncRoute(async (_req, res) => {
+    let database = 'ok';
+    try {
+      await getDb();
+    } catch (error) {
+      database = (error as Error).message;
+    }
+
+    res.json({
+      status: 'ok',
+      env: env.nodeEnv,
+      database: { driver: getActiveDriver(), status: database },
+      integrations: {
+        stripe: capabilities.stripe,
+        stripeWebhooks: capabilities.stripeWebhooks,
+        paymentLinks: capabilities.paymentLinks,
+        gemini: capabilities.gemini,
+        email: capabilities.email,
+        postgres: capabilities.postgres,
+        appSecret: capabilities.secretConfigured,
+      },
+    });
+  }),
+);
