@@ -57,7 +57,7 @@ export async function createCheckoutSession(params: {
   const product = PRODUCTS[params.tier];
   const metadata = clampMetadata(params.metadata);
 
-  return stripe.checkout.sessions.create({
+  const session: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: [
       params.priceId
@@ -70,6 +70,7 @@ export async function createCheckoutSession(params: {
               product_data: {
                 name: product.name,
                 description: product.headline,
+                ...(env.stripeTaxCode ? { tax_code: env.stripeTaxCode } : {}),
               },
             },
           },
@@ -82,7 +83,21 @@ export async function createCheckoutSession(params: {
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
     allow_promotion_codes: true,
-  });
+  };
+
+  // Managed Payments is on by default for some accounts and rejects any line
+  // item whose product has no tax code — which fails session creation outright,
+  // before the buyer ever reaches a payment page. Without a configured tax code
+  // there is nothing valid to send, so this opts the session out and uses
+  // ordinary Checkout instead of guessing a tax classification.
+  //
+  // Cast because `managed_payments` postdates the pinned SDK's types; the API
+  // accepts it, and it is named in Stripe's own error for this case.
+  if (!env.stripeTaxCode) {
+    (session as Record<string, unknown>).managed_payments = { enabled: false };
+  }
+
+  return stripe.checkout.sessions.create(session);
 }
 
 /**

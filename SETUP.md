@@ -386,6 +386,15 @@ npm start        # run the production build locally
 No `STRIPE_SECRET_KEY` and no payment links, or you added them but did not
 redeploy. Check `/api/config/health`.
 
+**Checkout button fails and nothing reaches Stripe's payment page**
+Check the Vercel runtime logs for `POST /api/checkout/create-session`. If it
+reads *"the product tax code is missing … required for Managed Payments"*, your
+account has Managed Payments enabled, which refuses any product without a tax
+class. The app handles this by switching Managed Payments off per session, so
+checkout works with tax left to you. To use it instead, pick a code at
+<https://dashboard.stripe.com/settings/tax> and set `STRIPE_TAX_CODE` — the
+products are updated with it automatically on the next sync.
+
 **No products showing in my Stripe dashboard**
 They are created on first use, so nothing appears until someone loads the site
 after `STRIPE_SECRET_KEY` was added. Force it now with the `curl` in
