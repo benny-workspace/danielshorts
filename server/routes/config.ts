@@ -89,7 +89,7 @@ function readinessWarnings(): string[] {
   }
   if (!capabilities.postgres) {
     warnings.push(
-      'No DATABASE_URL. Orders live in per-instance memory, so the success screen may not find an order another instance created.',
+      'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history and sign-in will be empty.',
     );
   }
 

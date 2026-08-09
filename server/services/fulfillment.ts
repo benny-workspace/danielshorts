@@ -93,7 +93,9 @@ export async function fulfillOrder(params: {
       'application/pdf',
     );
 
-    const token = signDownloadToken(order.id, order.email);
+    // The session id rides along so the link still works from an instance that
+    // has no record of this order — see recoverOrderFromSession.
+    const token = signDownloadToken(order.id, order.email, order.stripeSessionId);
     const downloadUrl = `${params.appUrl.replace(/\/$/, '')}/api/download/${token}`;
 
     const updated =

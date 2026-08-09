@@ -5,6 +5,15 @@ export interface DownloadClaims {
   kind: 'download';
   orderId: string;
   email: string;
+  /**
+   * The Stripe Checkout Session behind this purchase, when there was one.
+   *
+   * Carried so a download can be honoured by an instance that has no record of
+   * the order: it re-verifies the payment against Stripe rather than trusting
+   * the link. Without it, a deployment running on the in-memory store would
+   * serve the download only from whichever instance happened to fulfil it.
+   */
+  sessionId?: string;
 }
 
 export interface SessionClaims {
@@ -33,8 +42,15 @@ function verify<T extends Claims>(token: string, kind: T['kind']): T | null {
   }
 }
 
-export function signDownloadToken(orderId: string, email: string): string {
-  return sign({ kind: 'download', orderId, email }, `${env.downloadTtlHours}h`);
+export function signDownloadToken(
+  orderId: string,
+  email: string,
+  sessionId?: string | null,
+): string {
+  return sign(
+    { kind: 'download', orderId, email, ...(sessionId ? { sessionId } : {}) },
+    `${env.downloadTtlHours}h`,
+  );
 }
 
 export function verifyDownloadToken(token: string): DownloadClaims | null {
