@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { getDb } from '../db/index.js';
+import { log, resolveAppUrl } from '../env.js';
 import { asyncRoute, rateLimit } from '../lib/http.js';
 import { verifyDownloadToken } from '../lib/tokens.js';
 import { renderOrderPdf } from '../services/fulfillment.js';
+import { recoverOrderFromSession } from '../services/orders.js';
 
 export const downloadRouter = Router();
 
@@ -27,7 +29,20 @@ downloadRouter.get(
       return;
     }
 
-    const order = await (await getDb()).getOrder(claims.orderId);
+    let order = await (await getDb()).getOrder(claims.orderId);
+
+    // The download is a separate request from the one that fulfilled the order,
+    // so on the in-memory store it routinely lands on an instance that knows
+    // nothing about it. Re-verify the purchase against Stripe instead of
+    // turning a paying customer away.
+    if (!order && claims.sessionId) {
+      try {
+        order = await recoverOrderFromSession(claims.sessionId, resolveAppUrl(req));
+      } catch (error) {
+        log('download recovery failed:', (error as Error).message);
+      }
+    }
+
     if (!order || order.email !== claims.email) {
       res.status(404).type('text/plain').send('Order not found.');
       return;

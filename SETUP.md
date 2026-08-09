@@ -46,10 +46,12 @@ live is four variables:
 | `RESEND_API_KEY` | Nothing gets emailed; buyers only see the success screen |
 | `MAIL_FROM` | The default sender only delivers to **your own** address (see step 4) |
 
-`DATABASE_URL` is not strictly required but matters more than it looks in
-production: without it each serverless instance keeps its own memory, so the
-success screen can poll an instance that has never heard of the order. See
-step 6.
+`DATABASE_URL` is genuinely optional for taking money. Each serverless instance
+keeps its own memory, so an instance may never have heard of a given order —
+but both the success screen and the download link carry the Stripe session id
+and re-verify the purchase against Stripe, so the buyer still gets their files.
+What you lose without it is order *history*: signing in shows an empty library.
+See step 6.
 
 The live product catalogue (`kdd_blueprint`, `kdd_bundle`, `kdd_coaching`) and
 the live webhook endpoint pointing at `/api/webhooks/stripe` already exist.
