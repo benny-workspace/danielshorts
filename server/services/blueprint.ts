@@ -18,6 +18,15 @@ export interface BlueprintContent {
     advice: string;
   }>;
   dreamScenario: { title: string; hangul: string; scenes: string[] };
+  /**
+   * The shot-by-shot Dream Outcome Script. Only printed for the bundle tiers,
+   * but always generated — it costs nothing extra and keeps the two paths
+   * producing the same object shape.
+   */
+  dreamScript: {
+    logline: string;
+    beats: Array<{ heading: string; direction: string; line: string }>;
+  };
   thirtyDayPlan: Array<{ week: string; focus: string; actions: string[] }>;
   affirmations: string[];
   closing: string;

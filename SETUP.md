@@ -32,6 +32,37 @@ polish.
 
 ---
 
+## Going live
+
+A `sk_test_` key means **no real customer can pay you** — Stripe only accepts
+test cards, and test mode has its own separate product catalogue. Switching to
+live is four variables:
+
+| Variable | Why it blocks you |
+|---|---|
+| `STRIPE_SECRET_KEY` (the `sk_live_` one) | Test keys cannot take real money |
+| `STRIPE_WEBHOOK_SECRET` | **Without it, payments succeed and nothing is delivered** |
+| `APP_SECRET` | Download links fall back to a value published in this repo |
+| `RESEND_API_KEY` | Nothing gets emailed; buyers only see the success screen |
+
+`DATABASE_URL` is not strictly required but matters more than it looks in
+production: without it each serverless instance keeps its own memory, so the
+success screen can poll an instance that has never heard of the order. See
+step 6.
+
+The live product catalogue (`kdd_blueprint`, `kdd_bundle`, `kdd_coaching`) and
+the live webhook endpoint pointing at `/api/webhooks/stripe` already exist.
+Confirm everything landed:
+
+```
+https://danielshorts.vercel.app/api/config/health
+```
+
+Every flag under `integrations` should read `true` before you take a real
+payment.
+
+---
+
 ## How to add an environment variable on Vercel
 
 You will do this several times, so here it is once:

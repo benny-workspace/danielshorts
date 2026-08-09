@@ -58,9 +58,9 @@ export const PRODUCTS: Record<ProductTier, Product> = {
       'Everything in the Blueprint, plus a custom AI-written dream outcome video script in your own story, and the complete compatibility library for all five archetypes.',
     deliverables: [
       'Everything in the Romantic Blueprint',
-      'Custom AI Dream Outcome video script (yours alone)',
+      'Expanded to a 23-page premium edition',
+      'Your Dream Outcome Script, written shot by shot',
       'All 5 Archetype Compatibility Books',
-      'Lifetime access to future revisions',
     ],
     imageKey: 'product_bundle',
     badge: 'Best value',
@@ -76,7 +76,7 @@ export const PRODUCTS: Record<ProductTier, Product> = {
     description:
       'Everything above, plus the Notion workspace that turns the reading into a routine — daily planner, habit and mood tracking, journal, goals and vision board, all feeding one life dashboard.',
     deliverables: [
-      'Everything in the Premium Bundle',
+      'Everything in the Premium Bundle, all 23 pages',
       'The Aesthetic Planner Bundle — a full Notion workspace',
       'Daily planner, habit tracker, mood log and journal',
       'Goals, vision board, Future Me and a life-stats dashboard',
