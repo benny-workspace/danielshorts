@@ -1,82 +1,19 @@
 import { Router, raw } from 'express';
 import type Stripe from 'stripe';
-import { isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
-import { isProductTier, PRODUCTS, type ProductTier } from '../../shared/products.js';
 import { getDb, type Order } from '../db/index.js';
 import { capabilities, log, resolveAppUrl } from '../env.js';
 import { asyncRoute } from '../lib/http.js';
 import { fulfillOrder } from '../services/fulfillment.js';
+import {
+  answersFromMetadata,
+  emailFromSession,
+  metaOf,
+  resolveOrderForPayment,
+  type StripeMetadata,
+} from '../services/orders.js';
 import { constructWebhookEvent } from '../services/stripe.js';
 
 export const webhookRouter = Router();
-
-type StripeMetadata = Record<string, string | undefined> | null | undefined;
-
-function metaOf(object: unknown): StripeMetadata {
-  return (object as { metadata?: StripeMetadata } | null)?.metadata ?? null;
-}
-
-function tierFromAmount(amount: number | null | undefined): ProductTier {
-  const match = (Object.keys(PRODUCTS) as ProductTier[]).find(
-    (tier) => PRODUCTS[tier].amount === amount,
-  );
-  return match ?? 'blueprint';
-}
-
-/**
- * Finds the order this payment belongs to. Checkout Sessions carry the id in
- * `client_reference_id`; API-created sessions also carry it in metadata. When
- * nothing matches (e.g. a Payment Link opened without going through our
- * checkout endpoint) an order is created from what Stripe gave us so the buyer
- * is still fulfilled.
- */
-async function resolveOrder(params: {
-  orderId?: string;
-  stripeSessionId?: string;
-  email?: string;
-  amount?: number | null;
-  metadata: StripeMetadata;
-}): Promise<Order | null> {
-  const db = await getDb();
-
-  if (params.orderId) {
-    const byId = await db.getOrder(params.orderId);
-    if (byId) return byId;
-  }
-
-  if (params.stripeSessionId) {
-    const bySession = await db.getOrderByStripeSession(params.stripeSessionId);
-    if (bySession) return bySession;
-  }
-
-  if (!params.email) return null;
-
-  const tier = isProductTier(params.metadata?.tier)
-    ? params.metadata.tier
-    : tierFromAmount(params.amount);
-  const archetype: ArchetypeId = isArchetypeId(params.metadata?.winningArchetype)
-    ? (params.metadata.winningArchetype as ArchetypeId)
-    : 'best_friend';
-
-  const user = await db.upsertUser(params.email);
-  log('no matching order; creating one from webhook payload for', params.email);
-
-  return db.createOrder({
-    stripeSessionId: params.stripeSessionId ?? null,
-    userId: user.id,
-    email: params.email,
-    productTier: tier,
-    amountPaid: params.amount ?? PRODUCTS[tier].amount,
-    currency: 'usd',
-    status: 'paid',
-    downloadUrl: null,
-    storageKey: null,
-    blueprint: null,
-    winningArchetype: archetype,
-    quizAttemptId: params.metadata?.quizAttemptId || null,
-    failureReason: null,
-  });
-}
 
 async function handlePaidEvent(
   order: Order,
@@ -91,15 +28,7 @@ async function handlePaidEvent(
     ...(amount ? { amountPaid: amount } : {}),
   });
 
-  const answers = (metadata?.quizAnswers ?? '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(isArchetypeId);
-
-  const scoreBreakdown = answers.reduce<Record<string, number>>((acc, answer) => {
-    acc[answer] = (acc[answer] ?? 0) + 1;
-    return acc;
-  }, {});
+  const { answers, scoreBreakdown } = answersFromMetadata(metadata);
 
   await fulfillOrder({
     orderId: order.id,
@@ -161,13 +90,10 @@ webhookRouter.post(
             return;
           }
           const metadata = metaOf(session);
-          const order = await resolveOrder({
+          const order = await resolveOrderForPayment({
             orderId: session.client_reference_id ?? metadata?.orderId,
             stripeSessionId: session.id,
-            email:
-              session.customer_details?.email ??
-              session.customer_email ??
-              metadata?.userEmail,
+            email: emailFromSession(session),
             amount: session.amount_total,
             metadata,
           });
@@ -188,7 +114,7 @@ webhookRouter.post(
           const metadata = metaOf(intent);
           // Checkout flows also emit checkout.session.completed; fulfilment is
           // idempotent, so whichever lands first wins and the other no-ops.
-          const order = await resolveOrder({
+          const order = await resolveOrderForPayment({
             orderId: metadata?.orderId,
             email: intent.receipt_email ?? metadata?.userEmail,
             amount: intent.amount_received || intent.amount,

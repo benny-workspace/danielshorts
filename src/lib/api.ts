@@ -108,8 +108,11 @@ export interface OrderStatus {
   templateUrl: string | null;
 }
 
-export const getOrder = (id: string) =>
-  request<OrderStatus>(`/api/checkout/order/${encodeURIComponent(id)}`);
+export const getOrder = (id: string, sessionId?: string | null) =>
+  request<OrderStatus>(
+    `/api/checkout/order/${encodeURIComponent(id)}` +
+      (sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : ''),
+  );
 
 /* ------------------------------------------------------------------ ai --- */
 

@@ -10,10 +10,12 @@ import { useMoney } from './primitives';
  */
 export function OrderStatusPanel({
   orderId,
+  sessionId,
   cancelled,
   onDismiss,
 }: {
   orderId: string;
+  sessionId?: string | null;
   cancelled: boolean;
   onDismiss: () => void;
 }) {
@@ -29,7 +31,7 @@ export function OrderStatusPanel({
 
     const poll = async () => {
       try {
-        const next = await getOrder(orderId);
+        const next = await getOrder(orderId, sessionId);
         if (!active) return;
         setOrder(next);
         if (next.status === 'fulfilled' || next.status === 'failed') return;
@@ -48,7 +50,7 @@ export function OrderStatusPanel({
     return () => {
       active = false;
     };
-  }, [orderId, cancelled]);
+  }, [orderId, sessionId, cancelled]);
 
   if (cancelled) {
     return (

@@ -37,6 +37,8 @@ const BRAND_ACCENT = '226 86 110';
 
 interface CheckoutReturn {
   orderId: string;
+  /** Stripe's session id, used to recover the order if the webhook lags. */
+  sessionId: string | null;
   cancelled: boolean;
 }
 
@@ -53,6 +55,9 @@ function readReturnState(): {
   const params = new URLSearchParams(window.location.search);
   const checkoutState = params.get('checkout');
   const orderId = params.get('order');
+  // Stripe substitutes this into the success URL. It is what lets the success
+  // screen recover a paid order the server has not caught up with yet.
+  const sessionId = params.get('session_id');
   const archetype = params.get('archetype');
   const auth = params.get('auth');
 
@@ -63,7 +68,7 @@ function readReturnState(): {
   return {
     checkout:
       checkoutState && orderId
-        ? { orderId, cancelled: checkoutState === 'cancelled' }
+        ? { orderId, sessionId, cancelled: checkoutState === 'cancelled' }
         : null,
     archetype: isArchetypeId(archetype) ? archetype : null,
     auth,
@@ -239,6 +244,7 @@ function AppShell() {
         {checkout ? (
           <OrderStatusPanel
             orderId={checkout.orderId}
+            sessionId={checkout.sessionId}
             cancelled={checkout.cancelled}
             onDismiss={() => setCheckout(null)}
           />
