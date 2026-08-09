@@ -32,6 +32,7 @@ export async function renderOrderPdf(order: Order): Promise<Buffer> {
     name: user?.name ?? null,
     email: order.email,
     orderId: order.id,
+    tier: order.productTier as ProductTier,
   });
 }
 
@@ -83,6 +84,7 @@ export async function fulfillOrder(params: {
       name: user?.name ?? null,
       email: order.email,
       orderId: order.id,
+      tier: order.productTier as ProductTier,
     });
 
     const stored = await persistFile(

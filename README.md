@@ -73,6 +73,12 @@ the CDN serves `dist/`. The API behaves identically in all three.
 | `GET` | `/api/user/orders` · `/favorites` · `/quiz-history` | Signed-in reader data |
 | `POST` | `/api/admin/stripe/sync` | Create the Stripe catalogue (Bearer `APP_SECRET`) |
 
+Two PDF editions are generated from one document model: the base 15-page
+blueprint for the $2 tier, and a 23-page premium edition for the $3 and $5
+tiers that adds the Dream Outcome Script and the five archetype books. The tier
+travels on the order, so `renderOrderPdf` reproduces the right edition on any
+later download.
+
 ### How a purchase flows
 
 ```

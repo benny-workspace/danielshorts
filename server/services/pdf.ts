@@ -1,9 +1,16 @@
 import PDFDocument from 'pdfkit';
+import { ARCHETYPE_IDS, ARCHETYPES, getArchetype } from '../../shared/archetypes.js';
+import { getCompatibility } from '../../shared/compatibility.js';
+import type { ProductTier } from '../../shared/products.js';
 import type { BlueprintContent } from './blueprint.js';
 
 const PAGE = { width: 595.28, height: 841.89 }; // A4 portrait, points
 const MARGIN = 62;
 const CONTENT_WIDTH = PAGE.width - MARGIN * 2;
+
+/** Printed on the cover. Asserted by the tests, so they must stay in step. */
+const BASE_PAGES = 15;
+const PREMIUM_PAGES = 23;
 
 const INK = '#14121A';
 const MUTED = '#6B6472';
@@ -253,15 +260,30 @@ class Layout {
  */
 export function renderBlueprintPdf(
   content: BlueprintContent,
-  meta: { name?: string | null; email: string; orderId: string },
+  meta: {
+    name?: string | null;
+    email: string;
+    orderId: string;
+    /**
+     * Drives which edition is printed. The bundle tiers add the Dream Outcome
+     * Script and the five archetype books — the deliverables their product
+     * cards promise. Defaults to the base edition.
+     */
+    tier?: ProductTier;
+  },
 ): Promise<Buffer> {
+  const premium = meta.tier === 'bundle' || meta.tier === 'coaching';
+  const pageCount = premium ? PREMIUM_PAGES : BASE_PAGES;
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: [PAGE.width, PAGE.height],
       margin: MARGIN,
       bufferPages: true,
       info: {
-        Title: `${content.archetypeTitle} - Romantic Blueprint`,
+        Title: premium
+          ? `${content.archetypeTitle} - Premium Bundle Edition`
+          : `${content.archetypeTitle} - Romantic Blueprint`,
         Author: 'K-Drama Dreams',
         Subject: 'Personalised Romantic Blueprint & Compatibility Breakdown',
       },
@@ -288,7 +310,14 @@ export function renderBlueprintPdf(
       .font('Times-Italic')
       .fontSize(13)
       .fillColor('#B9AFA4')
-      .text('The Personalised Romantic Blueprint', MARGIN, 160, { width: CONTENT_WIDTH });
+      .text(
+        premium
+          ? 'The Personalised Romantic Blueprint · Premium Edition'
+          : 'The Personalised Romantic Blueprint',
+        MARGIN,
+        160,
+        { width: CONTENT_WIDTH },
+      );
     doc
       .font('Times-Bold')
       .fontSize(38)
@@ -322,7 +351,7 @@ export function renderBlueprintPdf(
       .fontSize(7.5)
       .fillColor('#6E6675')
       .text(
-        `15 pages  ·  ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}  ·  Order ${meta.orderId.slice(0, 8)}`,
+        `${pageCount} pages  ·  ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}  ·  Order ${meta.orderId.slice(0, 8)}`,
         MARGIN,
         PAGE.height - 96,
         { width: CONTENT_WIDTH },
@@ -462,6 +491,106 @@ export function renderBlueprintPdf(
     (content.affirmations ?? []).forEach((line) => {
       L.body(line, { italic: true, size: 11.5, color: ROSE });
     });
+
+    // ---- Premium edition only: the two bundle deliverables ---------------
+    if (premium) {
+      const script = content.dreamScript;
+      const beats = script?.beats ?? [];
+
+      const renderBeats = (slice: typeof beats) => {
+        slice.forEach((beat) => {
+          doc
+            .font('Helvetica-Bold')
+            .fontSize(8.5)
+            .fillColor(ROSE)
+            .text(sanitize(beat.heading), MARGIN, doc.y, {
+              width: CONTENT_WIDTH,
+              characterSpacing: 0.8,
+            });
+          doc.moveDown(0.35);
+          doc
+            .font('Times-Roman')
+            .fontSize(11)
+            .fillColor(INK)
+            .text(sanitize(beat.direction), MARGIN, doc.y, {
+              width: CONTENT_WIDTH,
+              lineGap: 3,
+            });
+          doc.moveDown(0.4);
+          // Dialogue is centred and inset, the way a screenplay sets it.
+          doc
+            .font('Times-Italic')
+            .fontSize(11.5)
+            .fillColor(GOLD)
+            .text(`"${sanitize(beat.line)}"`, MARGIN + 78, doc.y, {
+              width: CONTENT_WIDTH - 156,
+              align: 'center',
+              lineGap: 2.5,
+            });
+          doc.moveDown(0.9);
+          doc.x = MARGIN;
+        });
+      };
+
+      L.page('Chapter Ten').kicker('Bundle exclusive · your dream outcome script');
+      L.title('The scene, written to be filmed.');
+      if (script?.logline) {
+        L.body(script.logline, { italic: true, color: MUTED, size: 11 });
+        doc.moveDown(0.3);
+      }
+      renderBeats(beats.slice(0, 3));
+
+      L.page('Chapter Ten (continued)');
+      renderBeats(beats.slice(3));
+      L.pullQuote('You already know how this scene ends. That is the point.');
+
+      // ---- The five archetype books -------------------------------------
+      L.page('Chapter Eleven').kicker('Bundle exclusive · the five archetype books');
+      L.title('Everyone else you could love.');
+      L.body(
+        'The main blueprint reads you. These five read everyone else. One book per archetype: how they love, what they need, and precisely how they pair with you.',
+        { color: MUTED },
+      );
+      doc.moveDown(0.2);
+      ARCHETYPE_IDS.forEach((id) => {
+        const other = ARCHETYPES[id];
+        const match = getCompatibility(content.archetype, id);
+        L.meter(
+          `${other.title}${id === content.archetype ? ' (you)' : ''}`,
+          match.percent,
+          match.label,
+        );
+      });
+
+      ARCHETYPE_IDS.forEach((id, index) => {
+        const other = getArchetype(id);
+        const match = getCompatibility(content.archetype, id);
+        const isSelf = id === content.archetype;
+
+        L.page(`Book ${index + 1} of 5`).kicker(
+          isSelf ? 'Your own archetype, from the outside' : `Pairing with ${other.title}`,
+        );
+        L.title(other.title, 27);
+        L.body(other.essence, { italic: true, color: ROSE, size: 12 });
+        L.body(other.desc);
+
+        L.kicker('How they love');
+        L.body(`${other.trait}. ${other.traitExplanation}`);
+
+        L.entry('01', `Love language: ${other.loveLanguage}`, [
+          { text: `What reaches them: ${other.signals.join('; ')}.` },
+        ]);
+        L.entry('02', `With you: ${match.label} (${match.percent}%)`, [
+          { text: match.desc },
+          {
+            label: isSelf ? 'Note' : 'Advice',
+            text: isSelf
+              ? 'Two of the same archetype understand each other instantly and can stall just as fast — someone eventually has to move first.'
+              : `Lead with ${other.loveLanguage.toLowerCase()} and you will be speaking their language before you say anything at all.`,
+          },
+        ]);
+      });
+    }
 
     // ---- 15. Closing -----------------------------------------------------
     L.page('The last page').kicker('Before you close this');
