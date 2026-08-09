@@ -57,12 +57,16 @@ configRouter.get(
 );
 
 /**
- * Things that are configured but will still fail a real customer. Each one is
- * a state where some other signal reads "true" — a key is present, the flag is
- * green — while money or deliverables quietly go missing.
+ * Splits configuration problems by whether they would actually cost a sale.
+ *
+ * `warnings` are things that break a paying customer's experience; `advisories`
+ * are real but survivable. Keeping them apart is what makes `readyToSell`
+ * worth reading — a flag that stays false over a missing nice-to-have is a
+ * flag nobody looks at twice.
  */
-function readinessWarnings(): string[] {
+function readiness(): { warnings: string[]; advisories: string[] } {
   const warnings: string[] = [];
+  const advisories: string[] = [];
 
   if (capabilities.stripe && !capabilities.stripeLiveMode) {
     warnings.push(
@@ -87,13 +91,15 @@ function readinessWarnings(): string[] {
   if (!capabilities.email) {
     warnings.push('RESEND_API_KEY is missing. Orders still fulfil, but nothing is emailed.');
   }
+  // Not a warning: the success screen and the download link both re-verify the
+  // purchase against Stripe, so delivery no longer depends on a shared store.
   if (!capabilities.postgres) {
-    warnings.push(
+    advisories.push(
       'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history and sign-in will be empty.',
     );
   }
 
-  return warnings;
+  return { warnings, advisories };
 }
 
 /** Operational readiness, for the deploy checklist and uptime pings. */
@@ -107,13 +113,14 @@ configRouter.get(
       database = (error as Error).message;
     }
 
-    const warnings = readinessWarnings();
+    const { warnings, advisories } = readiness();
 
     res.json({
       status: 'ok',
-      /** True only when nothing above would silently fail a paying customer. */
+      /** True when nothing left would fail a paying customer. */
       readyToSell: warnings.length === 0,
       warnings,
+      advisories,
       stripeMode: capabilities.stripe ? (capabilities.stripeLiveMode ? 'live' : 'test') : null,
       env: env.nodeEnv,
       database: { driver: getActiveDriver(), status: database },
