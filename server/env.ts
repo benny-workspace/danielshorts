@@ -36,6 +36,13 @@ export const env = {
     coaching: str('STRIPE_PAYMENT_LINK_COACHING'),
   },
 
+  /**
+   * Share link to the Notion planner delivered with the top tier. Kept in the
+   * environment rather than in the repo: this repository is public, and the
+   * link is the product — committing it would hand it out for free.
+   */
+  notionTemplateUrl: str('NOTION_TEMPLATE_URL'),
+
   geminiApiKey: str('GEMINI_API_KEY', str('GOOGLE_API_KEY')),
   geminiModel: str('GEMINI_MODEL', 'gemini-2.5-flash'),
 
@@ -78,6 +85,9 @@ export const capabilities = {
   },
   get postgres() {
     return Boolean(env.databaseUrl);
+  },
+  get notionTemplate() {
+    return Boolean(env.notionTemplateUrl);
   },
   get secretConfigured() {
     return env.appSecret !== 'dev-only-insecure-secret-change-me';

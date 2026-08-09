@@ -21,6 +21,11 @@ export interface Product {
   badge?: string;
   /** Whether fulfilment generates and emails a personalised PDF. */
   generatesPdf: boolean;
+  /**
+   * Whether fulfilment also hands over the Notion planner. The link itself
+   * lives in NOTION_TEMPLATE_URL, never in this file — see server/env.ts.
+   */
+  deliversTemplate?: boolean;
 }
 
 export const PRODUCTS: Record<ProductTier, Product> = {
@@ -63,21 +68,23 @@ export const PRODUCTS: Record<ProductTier, Product> = {
   },
   coaching: {
     tier: 'coaching',
-    name: 'Coaching & Story Kit',
-    headline: '1-on-1 Romantic Coaching + Custom K-Drama Story Notion Template',
-    kicker: 'Limited seats',
+    name: 'The Aesthetic Planner Bundle',
+    headline: 'Your Blueprint + the Full Aesthetic Planner Bundle in Notion',
+    kicker: 'The complete kit',
     amount: 500,
     currency: 'usd',
     description:
-      'A private consultation to map your real-life romantic arc, paired with a Notion template built to plan, track, and write the story you actually want.',
+      'Everything above, plus the Notion workspace that turns the reading into a routine — daily planner, habit and mood tracking, journal, goals and vision board, all feeding one life dashboard.',
     deliverables: [
       'Everything in the Premium Bundle',
-      '1-on-1 romantic coaching consultation',
-      'Custom K-Drama Story Notion template',
-      'Priority email support for 30 days',
+      'The Aesthetic Planner Bundle — a full Notion workspace',
+      'Daily planner, habit tracker, mood log and journal',
+      'Goals, vision board, Future Me and a life-stats dashboard',
+      'Built for mobile, yours to duplicate and keep',
     ],
     imageKey: 'product_coaching',
     generatesPdf: true,
+    deliversTemplate: true,
   },
 };
 

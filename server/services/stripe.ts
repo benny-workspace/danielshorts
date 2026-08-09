@@ -45,6 +45,13 @@ export async function createCheckoutSession(params: {
   metadata: CheckoutMetadata;
   successUrl: string;
   cancelUrl: string;
+  /**
+   * Price from the Stripe catalogue. Preferred, because the sale is then
+   * attributed to a real product and the seller can re-price from the
+   * dashboard. Falls back to an inline amount when the catalogue is
+   * unreachable, so a Stripe blip never blocks a purchase.
+   */
+  priceId?: string | null;
 }): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe();
   const product = PRODUCTS[params.tier];
@@ -53,17 +60,19 @@ export async function createCheckoutSession(params: {
   return stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: product.currency,
-          unit_amount: product.amount,
-          product_data: {
-            name: product.name,
-            description: product.headline,
+      params.priceId
+        ? { price: params.priceId, quantity: 1 }
+        : {
+            quantity: 1,
+            price_data: {
+              currency: product.currency,
+              unit_amount: product.amount,
+              product_data: {
+                name: product.name,
+                description: product.headline,
+              },
+            },
           },
-        },
-      },
     ],
     ...(params.email ? { customer_email: params.email } : {}),
     client_reference_id: params.metadata.orderId,

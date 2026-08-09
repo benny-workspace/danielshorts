@@ -1,4 +1,4 @@
-import { CheckCircle2, Download, Loader2, TriangleAlert } from 'lucide-react';
+import { CheckCircle2, Download, ExternalLink, Loader2, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getOrder, type OrderStatus as Order } from '../lib/api';
 import { useMoney } from './primitives';
@@ -78,15 +78,34 @@ export function OrderStatusPanel({
             A copy is on its way to your inbox with a receipt. You can also grab it here —
             the link is signed and expires, so save the file once it opens.
           </p>
-          <a
-            href={order.downloadUrl ?? '#'}
-            className="btn btn-primary mt-6 w-full sm:w-auto"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Download size={15} strokeWidth={1.8} />
-            Download the PDF
-          </a>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              href={order.downloadUrl ?? '#'}
+              className="btn btn-primary w-full sm:w-auto"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Download size={15} strokeWidth={1.8} />
+              Download the PDF
+            </a>
+            {order.templateUrl ? (
+              <a
+                href={order.templateUrl}
+                className="btn btn-ghost w-full sm:w-auto"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={15} strokeWidth={1.8} />
+                Open the Notion planner
+              </a>
+            ) : null}
+          </div>
+          {order.templateUrl ? (
+            <p className="mt-4 text-xs leading-relaxed text-ivory-3">
+              In Notion, hit <span className="text-ivory-2">Duplicate</span> in the top-right
+              to save your own copy of the planner.
+            </p>
+          ) : null}
           <p className="mt-4 text-[0.6875rem] text-ivory-3">
             Order {order.id.slice(0, 8).toUpperCase()} · {money(order.amountPaid)}
           </p>

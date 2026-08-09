@@ -1,5 +1,5 @@
 import type { ArchetypeId } from '@shared/archetypes';
-import { Download, Loader2, LogOut, Mail } from 'lucide-react';
+import { Download, ExternalLink, Loader2, LogOut, Mail } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import {
   getMe,
@@ -127,16 +127,31 @@ export function AccountSheet({
                       {new Date(order.createdAt).toLocaleDateString()} ·{' '}
                       {order.archetypeTitle ?? '—'}
                     </p>
-                    {order.downloadUrl ? (
-                      <a
-                        href={order.downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-flex items-center gap-2 text-xs text-[rgb(var(--accent))] transition-opacity hover:opacity-80"
-                      >
-                        <Download size={12} strokeWidth={1.8} />
-                        Download PDF
-                      </a>
+                    {order.downloadUrl || order.templateUrl ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                        {order.downloadUrl ? (
+                          <a
+                            href={order.downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-xs text-[rgb(var(--accent))] transition-opacity hover:opacity-80"
+                          >
+                            <Download size={12} strokeWidth={1.8} />
+                            Download PDF
+                          </a>
+                        ) : null}
+                        {order.templateUrl ? (
+                          <a
+                            href={order.templateUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-xs text-ivory-2 transition-opacity hover:opacity-80"
+                          >
+                            <ExternalLink size={12} strokeWidth={1.8} />
+                            Notion planner
+                          </a>
+                        ) : null}
+                      </div>
                     ) : (
                       <p className="mt-3 text-[0.6875rem] capitalize text-ivory-3">
                         Status: {order.status}

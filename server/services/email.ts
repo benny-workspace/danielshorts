@@ -79,6 +79,9 @@ const SHELL = (title: string, body: string, footerNote?: string) => `<!doctype h
 const button = (href: string, label: string) =>
   `<a href="${href}" style="display:inline-block;background:#c33c56;color:#fbf8f3;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;padding:14px 26px;border-radius:8px;">${label}</a>`;
 
+const secondaryButton = (href: string, label: string) =>
+  `<a href="${href}" style="display:inline-block;background:#fbf8f3;color:#14121a;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;padding:13px 25px;border-radius:8px;border:1px solid #d8cfc2;">${label}</a>`;
+
 export function sendFulfillmentEmail(params: {
   to: string;
   name?: string | null;
@@ -89,10 +92,33 @@ export function sendFulfillmentEmail(params: {
   amountPaid: number;
   currency: string;
   pdf?: Buffer;
+  /** Notion planner link, on tiers that include it. */
+  templateUrl?: string | null;
 }): Promise<SendResult> {
   const product = PRODUCTS[params.tier];
   const greeting = params.name?.trim() ? `${params.name.trim()},` : 'Hello,';
   const price = formatPrice(params.amountPaid, params.currency);
+
+  // Given its own block rather than a line in the receipt: it is the half of
+  // this tier that is not the PDF, and it needs to survive a skim.
+  const templateBlock = params.templateUrl
+    ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3ece2;border-radius:10px;margin:0 0 26px;">
+      <tr><td style="padding:20px 22px;">
+        <div style="font-family:Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:2px;color:#a8873f;font-weight:700;margin-bottom:8px;">ALSO INCLUDED</div>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.6;">
+          Your <strong>Aesthetic Planner Bundle</strong> in Notion — planner, habit and mood
+          tracking, journal, goals and vision board. Open it, then use
+          <strong>Duplicate</strong> in the top-right to keep your own copy forever.
+        </p>
+        ${secondaryButton(params.templateUrl, 'Open the Notion planner')}
+      </td></tr>
+    </table>`
+    : '';
+
+  const templateText = params.templateUrl
+    ? `\nYour Aesthetic Planner Bundle (Notion): ${params.templateUrl}\nOpen it, then hit Duplicate in the top-right to keep your own copy.\n`
+    : '';
 
   const body = `
     <p style="margin:0 0 18px;">${greeting}</p>
@@ -101,6 +127,7 @@ export function sendFulfillmentEmail(params: {
     <p style="margin:0 0 22px;font-size:13px;color:#6b6472;font-family:Helvetica,Arial,sans-serif;">
       This link is signed and expires in ${env.downloadTtlHours} hours. Save the PDF once you open it.
     </p>
+    ${templateBlock}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e4ddd3;margin-top:8px;">
       <tr><td style="padding-top:16px;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#6b6472;">
         <div style="letter-spacing:2px;font-weight:700;color:#a8873f;font-size:10px;margin-bottom:8px;">ORDER RECEIPT</div>
@@ -116,7 +143,7 @@ Your ${product.name} is ready — written around your exact quiz answers for ${p
 
 Download: ${params.downloadUrl}
 (This signed link expires in ${env.downloadTtlHours} hours.)
-
+${templateText}
 Order ${params.orderId.slice(0, 8).toUpperCase()} · ${product.headline} · ${price}
 
 — K-Drama Dreams`;

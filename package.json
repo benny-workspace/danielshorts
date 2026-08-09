@@ -9,6 +9,7 @@
     "build:client": "vite build",
     "start": "NODE_ENV=production node dist/server.cjs",
     "preview": "vite preview",
+    "stripe:sync": "tsx scripts/stripe-sync.ts",
     "clean": "rm -rf dist .data",
     "lint": "tsc --noEmit"
   },
