@@ -104,6 +104,8 @@ export interface OrderStatus {
   amountPaid: number;
   currency: string;
   downloadUrl: string | null;
+  /** Notion planner link, present only on fulfilled orders that include it. */
+  templateUrl: string | null;
 }
 
 export const getOrder = (id: string) =>
@@ -165,6 +167,7 @@ export interface PublicOrder {
   currency: string;
   status: string;
   downloadUrl: string | null;
+  templateUrl: string | null;
   archetypeTitle: string | null;
   createdAt: string;
 }

@@ -1,7 +1,7 @@
 import { getArchetype, isArchetypeId, type ArchetypeId } from '../../shared/archetypes.js';
 import { PRODUCTS, type ProductTier } from '../../shared/products.js';
 import { getDb, type Order } from '../db/index.js';
-import { log } from '../env.js';
+import { env, log } from '../env.js';
 import { signDownloadToken } from '../lib/tokens.js';
 import type { BlueprintContent } from './blueprint.js';
 import { sendFulfillmentEmail } from './email.js';
@@ -105,6 +105,8 @@ export async function fulfillOrder(params: {
 
     if (updated.userId) await db.incrementPurchases(updated.userId);
 
+    const product = PRODUCTS[updated.productTier as ProductTier];
+
     const email = await sendFulfillmentEmail({
       to: updated.email,
       name: user?.name ?? null,
@@ -115,7 +117,8 @@ export async function fulfillOrder(params: {
       amountPaid: updated.amountPaid,
       currency: updated.currency,
       // Attach directly so the product lands even if the link is never clicked.
-      pdf: PRODUCTS[updated.productTier as ProductTier].generatesPdf ? pdf : undefined,
+      pdf: product.generatesPdf ? pdf : undefined,
+      templateUrl: product.deliversTemplate ? env.notionTemplateUrl || null : null,
     });
 
     log('fulfilled order', updated.id, 'emailed:', email.sent);

@@ -3,6 +3,7 @@ import { PRODUCTS, PRODUCT_TIERS } from '../../shared/products.js';
 import { getActiveDriver, getDb } from '../db/index.js';
 import { capabilities, env } from '../env.js';
 import { asyncRoute } from '../lib/http.js';
+import { getCatalog } from '../services/catalog.js';
 
 export const configRouter = Router();
 
@@ -13,38 +14,47 @@ export const configRouter = Router();
  *
  * Only booleans are exposed here; no key material or endpoints.
  */
-configRouter.get('/', (_req, res) => {
-  res.json({
-    products: PRODUCT_TIERS.map((tier) => {
-      const product = PRODUCTS[tier];
-      return {
-        tier,
-        name: product.name,
-        headline: product.headline,
-        kicker: product.kicker,
-        amount: product.amount,
-        currency: product.currency,
-        description: product.description,
-        deliverables: product.deliverables,
-        badge: product.badge ?? null,
-        available: capabilities.stripe || Boolean(env.paymentLinks[tier]),
-      };
-    }),
-    features: {
-      checkout: capabilities.stripe || capabilities.paymentLinks,
-      checkoutMode: capabilities.stripe
-        ? 'stripe_checkout'
-        : capabilities.paymentLinks
-          ? 'payment_link'
-          : 'disabled',
-      fulfillmentReady: capabilities.stripeWebhooks,
-      ai: capabilities.gemini,
-      email: capabilities.email,
-      accounts: capabilities.email,
-      persistence: true,
-    },
-  });
-});
+configRouter.get(
+  '/',
+  asyncRoute(async (_req, res) => {
+    // Prices come from Stripe when the catalogue is reachable, so re-pricing a
+    // product in the dashboard updates the site without a deploy. Marketing
+    // copy stays in the repo, where it is written against the layout.
+    const catalog = await getCatalog();
+
+    res.json({
+      products: PRODUCT_TIERS.map((tier) => {
+        const product = PRODUCTS[tier];
+        const live = catalog?.get(tier);
+        return {
+          tier,
+          name: product.name,
+          headline: product.headline,
+          kicker: product.kicker,
+          amount: live?.amount ?? product.amount,
+          currency: live?.currency ?? product.currency,
+          description: product.description,
+          deliverables: product.deliverables,
+          badge: product.badge ?? null,
+          available: capabilities.stripe || Boolean(env.paymentLinks[tier]),
+        };
+      }),
+      features: {
+        checkout: capabilities.stripe || capabilities.paymentLinks,
+        checkoutMode: capabilities.stripe
+          ? 'stripe_checkout'
+          : capabilities.paymentLinks
+            ? 'payment_link'
+            : 'disabled',
+        fulfillmentReady: capabilities.stripeWebhooks,
+        ai: capabilities.gemini,
+        email: capabilities.email,
+        accounts: capabilities.email,
+        persistence: true,
+      },
+    });
+  }),
+);
 
 /** Operational readiness, for the deploy checklist and uptime pings. */
 configRouter.get(
@@ -68,6 +78,7 @@ configRouter.get(
         gemini: capabilities.gemini,
         email: capabilities.email,
         postgres: capabilities.postgres,
+        notionTemplate: capabilities.notionTemplate,
         appSecret: capabilities.secretConfigured,
       },
     });

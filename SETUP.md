@@ -25,6 +25,7 @@ after each step below to confirm the key actually landed.
 | 4 | [Resend](#4-resend-email) | 10 min | Emailing the PDF + sign-in |
 | 5 | [Gemini](#5-gemini-ai-personalisation) | 5 min | AI-written blueprints |
 | 6 | [Database](#6-database-supabase-postgres) | 15 min | Orders surviving restarts |
+| 7 | [`NOTION_TEMPLATE_URL`](#7-notion_template_url-the-5-product) | 2 min | Delivering the $5 planner |
 
 Steps 2 and 3 together are what turn this into a business. Everything else is
 polish.
@@ -76,13 +77,14 @@ There are two ways to do this. **I recommend Path A.**
 
 The app creates the checkout page itself, which means the buyer's quiz answers
 travel with the payment automatically. That is what makes the PDF personalised.
-You do not need to create any products in the Stripe dashboard — the app defines
-the three tiers in code (`shared/products.ts`) and prices them at checkout.
 
 1. Go to <https://dashboard.stripe.com/apikeys>
 2. Copy the **Secret key** (starts with `sk_test_` in test mode, `sk_live_` in live mode)
 3. Add it to Vercel as `STRIPE_SECRET_KEY`
 4. Redeploy
+
+You do **not** need to create the products by hand — the app does it for you.
+See [your product catalogue](#your-product-catalogue) below.
 
 Start in **test mode**. Stripe's test card is `4242 4242 4242 4242`, any future
 expiry, any CVC. Switch to the `sk_live_` key when you are happy.
@@ -102,7 +104,7 @@ Use this if you would rather build the products by hand in Stripe's dashboard.
    |---|---|
    | Romantic Blueprint | $2.00 |
    | Premium Bundle | $3.00 |
-   | Coaching & Story Kit | $5.00 |
+   | The Aesthetic Planner Bundle | $5.00 |
 
 3. On each product click **Create payment link**
 4. In the link's settings, turn **on** "Collect customer's email address"
@@ -127,6 +129,46 @@ default archetype.
 If you set `STRIPE_SECRET_KEY`, it wins and the payment links are ignored. That
 is intentional: you can set up Path B now and upgrade to Path A later without
 deleting anything.
+
+### Your product catalogue
+
+On Path A, the app keeps three real products in your Stripe dashboard — not
+anonymous one-off charges. That means each sale is attributed to a product, you
+get per-product reporting, and **you can edit them by hand**.
+
+| Product ID | Tier | Default price |
+|---|---|---|
+| `kdd_blueprint` | Romantic Blueprint | $2.00 |
+| `kdd_bundle` | Premium Bundle | $3.00 |
+| `kdd_coaching` | The Aesthetic Planner Bundle | $5.00 |
+
+They are created automatically the first time anyone loads the site after you
+add `STRIPE_SECRET_KEY`. To create them right now instead of waiting:
+
+```bash
+curl -X POST https://danielshorts.vercel.app/api/admin/stripe/sync \
+  -H "Authorization: Bearer YOUR_APP_SECRET"
+```
+
+(Or locally: `STRIPE_SECRET_KEY=sk_... npm run stripe:sync`.)
+
+Either way it is safe to run repeatedly — anything that already exists is reused
+exactly as you left it.
+
+**Editing your products.** Once a product exists, Stripe is the boss. Change the
+name, description or image at <https://dashboard.stripe.com/products> and the
+app will never overwrite you — it only ever creates what is missing.
+
+**Changing a price.** Stripe prices are immutable, so you replace rather than
+edit. On the product, add a new price, then set its **lookup key** to the same
+one the old price had (`kdd_blueprint`, `kdd_bundle` or `kdd_coaching`), ticking
+the option to transfer the key. The site picks it up within five minutes — no
+deploy needed, and the new amount shows on the pricing cards automatically.
+
+> The names and descriptions shown *on the site* still come from
+> `shared/products.ts`, because that copy is written to fit the layout. Your
+> Stripe copy is what buyers see on the Stripe checkout page and their receipt.
+> Prices are read from Stripe in both places.
 
 ---
 
@@ -245,6 +287,35 @@ Downloads re-render the PDF from the database, so this is purely a backup.
 
 ---
 
+## 7. `NOTION_TEMPLATE_URL` (the $5 product)
+
+The top tier delivers your **Aesthetic Planner Bundle** Notion template. The app
+needs the share link to hand it over.
+
+1. Open the template in Notion
+2. **Share** → **Publish** (or **Share to web**), then **Copy link**
+3. Add it to Vercel as `NOTION_TEMPLATE_URL`
+4. Redeploy
+
+Once set, buyers of the $5 tier get the link in three places: the fulfilment
+email, the success screen after checkout, and their order history when signed in.
+
+> **This link is not in the repository, on purpose.** This repo is public, and
+> the link *is* the product — committing it would hand it out for free. Keep it
+> in the environment only.
+
+Two things worth doing in Notion so buyers can actually keep their copy:
+
+- Turn **on** "Allow duplicate as template" in the share settings, otherwise
+  they can read it but not save their own copy.
+- Turn **off** comments and editing, so one buyer cannot change what the next
+  one receives.
+
+Without this variable, the tier still sells and still delivers the PDF — the
+planner section is simply left out of the email rather than sending a dead link.
+
+---
+
 ## Local development
 
 ```bash
@@ -269,6 +340,22 @@ npm start        # run the production build locally
 **"Checkout is not connected yet" on the product cards**
 No `STRIPE_SECRET_KEY` and no payment links, or you added them but did not
 redeploy. Check `/api/config/health`.
+
+**No products showing in my Stripe dashboard**
+They are created on first use, so nothing appears until someone loads the site
+after `STRIPE_SECRET_KEY` was added. Force it now with the `curl` in
+[your product catalogue](#your-product-catalogue). Also check you are looking at
+the right mode — a `sk_test_` key creates them under **Test mode**, which is a
+separate catalogue from live.
+
+**I changed a price in Stripe but the site shows the old one**
+Either the new price is missing the lookup key (see
+[your product catalogue](#your-product-catalogue)), or you are inside the
+five-minute cache. Wait it out, or redeploy to clear it immediately.
+
+**Buyers of the $5 tier get no planner link**
+`NOTION_TEMPLATE_URL` is not set — see step 7. Confirm with
+`/api/config/health`, which reports `notionTemplate: true` once it is live.
 
 **Payment worked, no email, no download**
 `STRIPE_WEBHOOK_SECRET` is missing or wrong — see step 3. In the Stripe

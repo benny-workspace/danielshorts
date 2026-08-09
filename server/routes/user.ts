@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getArchetype, isArchetypeId } from '../../shared/archetypes.js';
 import { PRODUCTS } from '../../shared/products.js';
 import { getDb, type Order } from '../db/index.js';
+import { env } from '../env.js';
 import { asyncRoute, badRequest, rateLimit } from '../lib/http.js';
 import { currentUser } from './auth.js';
 
@@ -9,6 +10,7 @@ export const userRouter = Router();
 
 function toPublicOrder(order: Order) {
   const product = PRODUCTS[order.productTier];
+  const fulfilled = order.status === 'fulfilled';
   return {
     id: order.id,
     productTier: order.productTier,
@@ -18,7 +20,10 @@ function toPublicOrder(order: Order) {
     currency: order.currency,
     status: order.status,
     // Withheld until fulfilment succeeds so the UI never links to a dead file.
-    downloadUrl: order.status === 'fulfilled' ? order.downloadUrl : null,
+    downloadUrl: fulfilled ? order.downloadUrl : null,
+    // The library is where a buyer comes back to, and unlike the signed
+    // download link this one does not expire — so it belongs here too.
+    templateUrl: fulfilled && product?.deliversTemplate ? env.notionTemplateUrl || null : null,
     archetype: order.winningArchetype,
     archetypeTitle: order.winningArchetype
       ? getArchetype(order.winningArchetype).title

@@ -71,6 +71,7 @@ the CDN serves `dist/`. The API behaves identically in all three.
 | `GET` | `/api/download/:token` | Signed, time-limited PDF download |
 | `POST` | `/api/auth/magic-link` · `GET /verify` · `GET /me` · `POST /signout` | Passwordless sign-in |
 | `GET` | `/api/user/orders` · `/favorites` · `/quiz-history` | Signed-in reader data |
+| `POST` | `/api/admin/stripe/sync` | Create the Stripe catalogue (Bearer `APP_SECRET`) |
 
 ### How a purchase flows
 
@@ -126,6 +127,7 @@ DOM, so it is identical across browsers.
 npm run dev     # Express + Vite on :3000
 npm run lint    # tsc --noEmit across client, server and shared
 npm run build   # vite build + esbuild bundle of the server
+npm run stripe:sync  # create/reuse the Stripe products for all three tiers
 npm start       # run the production build
 ```
 

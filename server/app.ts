@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { env } from './env.js';
 import { HttpError } from './lib/http.js';
+import { adminRouter } from './routes/admin.js';
 import { aiRouter } from './routes/ai.js';
 import { authRouter } from './routes/auth.js';
 import { checkoutRouter } from './routes/checkout.js';
@@ -48,6 +49,7 @@ export function createApiApp(): Express {
   app.use('/api/user', userRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/download', downloadRouter);
+  app.use('/api/admin', adminRouter);
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Unknown endpoint', code: 'not_found' });

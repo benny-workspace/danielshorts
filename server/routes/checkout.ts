@@ -5,6 +5,7 @@ import { scoreQuiz } from '../../shared/questions.js';
 import { getDb } from '../db/index.js';
 import { capabilities, env, log, resolveAppUrl } from '../env.js';
 import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http.js';
+import { resolvePriceId } from '../services/catalog.js';
 import { buildPaymentLinkUrl, createCheckoutSession } from '../services/stripe.js';
 
 export const checkoutRouter = Router();
@@ -79,9 +80,14 @@ checkoutRouter.post(
     const cancelUrl = `${appUrl}/?checkout=cancelled&order=${order.id}`;
 
     if (capabilities.stripe) {
+      // Creates the catalogue entry on first use, so the products exist in
+      // Stripe even if the sync script was never run.
+      const priceId = await resolvePriceId(tier);
+
       const session = await createCheckoutSession({
         tier,
         email,
+        priceId,
         metadata: {
           tier,
           winningArchetype: archetype,
@@ -137,6 +143,9 @@ checkoutRouter.get(
       return;
     }
 
+    const fulfilled = order.status === 'fulfilled';
+    const product = isProductTier(order.productTier) ? PRODUCTS[order.productTier] : null;
+
     res.json({
       id: order.id,
       status: order.status,
@@ -145,7 +154,10 @@ checkoutRouter.get(
       currency: order.currency,
       winningArchetype: order.winningArchetype,
       // Only exposed once fulfilment has actually completed.
-      downloadUrl: order.status === 'fulfilled' ? order.downloadUrl : null,
+      downloadUrl: fulfilled ? order.downloadUrl : null,
+      // Same gate: the planner link is a paid deliverable, so it is only ever
+      // returned for a paid-and-fulfilled order on a tier that includes it.
+      templateUrl: fulfilled && product?.deliversTemplate ? env.notionTemplateUrl || null : null,
       createdAt: order.createdAt,
     });
   }),
