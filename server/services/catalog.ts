@@ -1,6 +1,6 @@
 import type Stripe from 'stripe';
 import { PRODUCTS, PRODUCT_TIERS, type Product, type ProductTier } from '../../shared/products.js';
-import { capabilities, log } from '../env.js';
+import { capabilities, env, log } from '../env.js';
 import { getStripe } from './stripe.js';
 
 /**
@@ -60,6 +60,19 @@ async function ensureProduct(
 
   try {
     const existing = await stripe.products.retrieve(id);
+
+    // The one field that is healed rather than left alone. Everything else —
+    // name, description, images — belongs to the dashboard, but a product with
+    // no tax code makes Managed Payments reject checkout entirely, so a
+    // configured code is applied to a product that is missing one.
+    if (env.stripeTaxCode && !existing.tax_code) {
+      log('adding missing tax code to', id);
+      return {
+        product: await stripe.products.update(id, { tax_code: env.stripeTaxCode }),
+        created: false,
+      };
+    }
+
     // Deliberately not patched back to the repo's copy. Once the product
     // exists, the dashboard owns its name, description and images — otherwise
     // every deploy would silently undo the seller's edits.
@@ -73,6 +86,7 @@ async function ensureProduct(
     name: product.name,
     description: product.description,
     metadata: { app: APP_TAG, tier },
+    ...(env.stripeTaxCode ? { tax_code: env.stripeTaxCode } : {}),
   });
 
   log('created stripe product', created.id);

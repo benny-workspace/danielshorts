@@ -27,6 +27,17 @@ export const env = {
   stripeSecretKey: str('STRIPE_SECRET_KEY'),
   stripeWebhookSecret: str('STRIPE_WEBHOOK_SECRET'),
   /**
+   * Stripe tax code for the digital products, e.g. `txcd_10000000`.
+   *
+   * Opt-in, and deliberately not defaulted: it decides how tax is calculated
+   * and remitted on every sale, which is the seller's call, not a guess this
+   * code should make. Setting it puts each product in that class and lets
+   * Managed Payments run; leaving it empty turns Managed Payments off per
+   * session so ordinary Checkout works and tax stays the seller's own
+   * responsibility.
+   */
+  stripeTaxCode: str('STRIPE_TAX_CODE'),
+  /**
    * Optional Stripe Payment Link per tier. When set, checkout redirects here
    * instead of creating an API Checkout Session — this is the no-code path.
    */
