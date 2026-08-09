@@ -64,13 +64,16 @@ https://danielshorts.vercel.app/api/config/health
 That endpoint answers the question directly:
 
 ```json
-{ "readyToSell": true, "stripeMode": "live", "warnings": [] }
+{ "readyToSell": true, "stripeMode": "live", "warnings": [], "advisories": [] }
 ```
 
-`readyToSell` is only `true` when nothing left in `warnings` would silently
-fail a paying customer — a missing webhook secret, a test-mode key, a sender
-address that cannot reach anyone but you. Read the warnings; they name the
-variable to fix.
+`readyToSell` is `true` when nothing left in `warnings` would fail a paying
+customer — a missing webhook secret, a test-mode key, a sender address that
+cannot reach anyone but you. Each warning names the variable to fix.
+
+`advisories` are real but survivable, so they do not hold the flag down. A
+missing `DATABASE_URL` lands here: buyers still receive everything, you just
+have no order history.
 
 ---
 
