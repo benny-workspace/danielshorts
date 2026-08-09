@@ -89,6 +89,21 @@ export const capabilities = {
   get notionTemplate() {
     return Boolean(env.notionTemplateUrl);
   },
+  /**
+   * Whether the configured Stripe key takes real money. Test keys are prefixed
+   * `sk_test_`; everything else (including restricted `rk_live_` keys) is live.
+   */
+  get stripeLiveMode() {
+    return Boolean(env.stripeSecretKey) && !env.stripeSecretKey.startsWith('sk_test_');
+  },
+  /**
+   * Resend's shared onboarding sender only delivers to the account owner's own
+   * address. It is fine for a smoke test and useless for customers, which is a
+   * difference no other signal in the app would reveal.
+   */
+  get mailFromIsShared() {
+    return /@resend\.dev\b/i.test(env.mailFrom);
+  },
   get secretConfigured() {
     return env.appSecret !== 'dev-only-insecure-secret-change-me';
   },

@@ -56,6 +56,46 @@ configRouter.get(
   }),
 );
 
+/**
+ * Things that are configured but will still fail a real customer. Each one is
+ * a state where some other signal reads "true" — a key is present, the flag is
+ * green — while money or deliverables quietly go missing.
+ */
+function readinessWarnings(): string[] {
+  const warnings: string[] = [];
+
+  if (capabilities.stripe && !capabilities.stripeLiveMode) {
+    warnings.push(
+      'Stripe is in TEST mode. Real cards are declined, and test mode has its own separate product catalogue.',
+    );
+  }
+  if (capabilities.stripe && !capabilities.stripeWebhooks) {
+    warnings.push(
+      'STRIPE_WEBHOOK_SECRET is missing. Payments will succeed and nothing will be generated or delivered.',
+    );
+  }
+  if (!capabilities.secretConfigured) {
+    warnings.push(
+      'APP_SECRET is unset, so download links are signed with the development default. Set it before selling.',
+    );
+  }
+  if (capabilities.email && capabilities.mailFromIsShared) {
+    warnings.push(
+      'MAIL_FROM uses Resend’s shared onboarding sender, which only delivers to your own account address. Verify a domain, or customers receive nothing.',
+    );
+  }
+  if (!capabilities.email) {
+    warnings.push('RESEND_API_KEY is missing. Orders still fulfil, but nothing is emailed.');
+  }
+  if (!capabilities.postgres) {
+    warnings.push(
+      'No DATABASE_URL. Orders live in per-instance memory, so the success screen may not find an order another instance created.',
+    );
+  }
+
+  return warnings;
+}
+
 /** Operational readiness, for the deploy checklist and uptime pings. */
 configRouter.get(
   '/health',
@@ -67,8 +107,14 @@ configRouter.get(
       database = (error as Error).message;
     }
 
+    const warnings = readinessWarnings();
+
     res.json({
       status: 'ok',
+      /** True only when nothing above would silently fail a paying customer. */
+      readyToSell: warnings.length === 0,
+      warnings,
+      stripeMode: capabilities.stripe ? (capabilities.stripeLiveMode ? 'live' : 'test') : null,
       env: env.nodeEnv,
       database: { driver: getActiveDriver(), status: database },
       integrations: {
