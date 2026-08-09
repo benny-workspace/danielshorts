@@ -44,6 +44,7 @@ live is four variables:
 | `STRIPE_WEBHOOK_SECRET` | **Without it, payments succeed and nothing is delivered** |
 | `APP_SECRET` | Download links fall back to a value published in this repo |
 | `RESEND_API_KEY` | Nothing gets emailed; buyers only see the success screen |
+| `MAIL_FROM` | The default sender only delivers to **your own** address (see step 4) |
 
 `DATABASE_URL` is not strictly required but matters more than it looks in
 production: without it each serverless instance keeps its own memory, so the
@@ -58,8 +59,16 @@ Confirm everything landed:
 https://danielshorts.vercel.app/api/config/health
 ```
 
-Every flag under `integrations` should read `true` before you take a real
-payment.
+That endpoint answers the question directly:
+
+```json
+{ "readyToSell": true, "stripeMode": "live", "warnings": [] }
+```
+
+`readyToSell` is only `true` when nothing left in `warnings` would silently
+fail a paying customer — a missing webhook secret, a test-mode key, a sender
+address that cannot reach anyone but you. Read the warnings; they name the
+variable to fix.
 
 ---
 
