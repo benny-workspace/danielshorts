@@ -4,6 +4,7 @@ import { isProductTier } from '../../shared/products.js';
 import { asyncRoute, optionalString, rateLimit } from '../lib/http.js';
 import {
   deviceFromUserAgent,
+  geoFromRequest,
   looksLikeBot,
   normalizeSource,
   track,
@@ -59,6 +60,8 @@ analyticsRouter.post(
 
     const device = deviceFromUserAgent(userAgent);
     const host = req.get('host') ?? null;
+    // Resolved once per batch: every event in it came from the same request.
+    const geo = geoFromRequest(req);
 
     for (const raw of incoming.slice(0, MAX_BATCH)) {
       const event = (raw ?? {}) as IncomingEvent;
@@ -84,6 +87,7 @@ analyticsRouter.post(
           optionalString(event.source, 120) ??
           normalizeSource(optionalString(event.referrer, 500), host),
         device,
+        ...geo,
         value: Number.isFinite(value) && value >= 0 ? value : null,
       });
     }

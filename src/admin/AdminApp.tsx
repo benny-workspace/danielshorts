@@ -466,6 +466,47 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           </div>
         </Section>
 
+        {/* ------------------------------------------------------ geography */}
+        <Section
+          title="Where they are"
+          blurb="Resolved from the request at the edge — no client-side lookup, so it cannot be faked or blocked. A country sending traffic but no checkouts is a targeting or a pricing signal."
+        >
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="panel p-5 sm:p-7">
+              <p className="label mb-5">Country</p>
+              {data.countries.length ? (
+                <BarList
+                  rows={data.countries.map((entry) => ({
+                    label: `${countryFlag(entry.country)}  ${countryName(entry.country)}`,
+                    value: entry.visitors,
+                    sub: entry.checkouts ? `${entry.checkouts} reached checkout` : undefined,
+                    tone: entry.checkouts
+                      ? 'rgb(151 208 168 / 0.7)'
+                      : 'rgb(var(--accent) / 0.6)',
+                  }))}
+                />
+              ) : (
+                <GeoEmpty />
+              )}
+            </div>
+
+            <div className="panel p-5 sm:p-7">
+              <p className="label mb-5">Region</p>
+              {data.regions.length ? (
+                <BarList
+                  rows={data.regions.map((entry) => ({
+                    label: `${countryFlag(entry.country)}  ${entry.region} · ${countryName(entry.country)}`,
+                    value: entry.visitors,
+                    sub: entry.checkouts ? `${entry.checkouts} reached checkout` : undefined,
+                  }))}
+                />
+              ) : (
+                <GeoEmpty />
+              )}
+            </div>
+          </div>
+        </Section>
+
         {/* ------------------------------------------------------- delivery */}
         <Section
           title="Did they get what they paid for"
@@ -587,6 +628,20 @@ function MemoryWarning() {
   );
 }
 
+/**
+ * Location comes from the hosting edge, which only fills those headers on a
+ * real deployment — so an empty panel locally means "not deployed", not "no
+ * visitors", and saying so avoids a false alarm.
+ */
+function GeoEmpty() {
+  return (
+    <div className="flex h-[120px] items-center justify-center border border-dashed border-line-soft px-4 text-center text-[0.6875rem] leading-relaxed text-ivory-3">
+      No location data yet. Locations are filled in by Vercel's edge on live
+      traffic, so this stays empty when running locally.
+    </div>
+  );
+}
+
 function Section({
   title,
   blurb,
@@ -647,6 +702,36 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 const rate = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
+
+/**
+ * Country code to a readable name, via the browser's own locale data rather
+ * than a bundled lookup table — a full ISO list is a few kilobytes that every
+ * runtime already ships.
+ */
+const COUNTRY_NAMES =
+  typeof Intl !== 'undefined' && 'DisplayNames' in Intl
+    ? new Intl.DisplayNames(['en'], { type: 'region' })
+    : null;
+
+function countryName(code: string): string {
+  try {
+    return COUNTRY_NAMES?.of(code.toUpperCase()) ?? code;
+  } catch {
+    // Not a valid region subtag — show whatever the edge reported.
+    return code;
+  }
+}
+
+/**
+ * Flag emoji from a country code: the two letters map to regional indicator
+ * symbols, which every platform renders as that country's flag.
+ */
+function countryFlag(code: string): string {
+  if (!/^[A-Za-z]{2}$/.test(code)) return '🌐';
+  return String.fromCodePoint(
+    ...[...code.toUpperCase()].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65),
+  );
+}
 
 function toneColor(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
   if (tone === 'good') return 'rgb(151 208 168)';

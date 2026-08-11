@@ -5,7 +5,7 @@ import { scoreQuiz } from '../../shared/questions.js';
 import { getDb } from '../db/index.js';
 import { capabilities, env, log, resolveAppUrl } from '../env.js';
 import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http.js';
-import { idsForOrder, track } from '../services/analytics.js';
+import { geoFromRequest, idsForOrder, track } from '../services/analytics.js';
 import { resolvePriceId } from '../services/catalog.js';
 import { recoverOrderFromSession } from '../services/orders.js';
 import { buildPaymentLinkUrl, createCheckoutSession } from '../services/stripe.js';
@@ -121,6 +121,9 @@ checkoutRouter.post(
         // The browser's own ids when it sent them, so the click and the session
         // belong to one person in the funnel rather than two.
         ...visitorIds,
+        // Carried here too, so "which countries actually reach the card form"
+        // is answerable and not just "which countries browse".
+        ...geoFromRequest(req),
         tier,
         archetype,
         value: product.amount,

@@ -67,12 +67,16 @@ create table if not exists analytics_events (
   path       text,
   source     text,
   device     text,
+  country    text,
+  region     text,
   value      integer,
   created_at timestamptz not null default now()
 );
 
 -- Added after the initial release; keeps existing deployments migrating cleanly.
 alter table orders add column if not exists blueprint jsonb;
+alter table analytics_events add column if not exists country text;
+alter table analytics_events add column if not exists region  text;
 
 create index if not exists orders_email_idx        on orders (lower(email));
 create index if not exists orders_created_at_idx   on orders (created_at desc);
