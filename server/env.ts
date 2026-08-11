@@ -65,11 +65,15 @@ export const env = {
   /** Signs download tokens and magic links. Falls back to an ephemeral value. */
   appSecret: str('APP_SECRET', 'dev-only-insecure-secret-change-me'),
   /**
-   * Opens the /admin dashboard. There is no default and no fallback: unset
-   * means the dashboard refuses every login rather than shipping a guessable
-   * one, which matters because this repository is public.
+   * Opens the /admin dashboard. There is no default: unset means the dashboard
+   * refuses every login rather than shipping a guessable one, which matters
+   * because this repository is public.
+   *
+   * Note this is a password to type, and quite separate from APP_SECRET above,
+   * which is a signing key nobody ever types. `ADMIN_PASSWORD` is accepted as
+   * an alias so either name works.
    */
-  adminPassword: str('ADMIN_PASSWORD'),
+  adminPassword: str('APP_SECRET_PW', str('ADMIN_PASSWORD')),
 
   storageBucketUrl: str('STORAGE_BUCKET_URL'),
   /** Where generated PDFs land when no bucket is configured. */

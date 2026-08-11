@@ -26,7 +26,7 @@ after each step below to confirm the key actually landed.
 | 5 | [Gemini](#5-gemini-ai-personalisation) | 5 min | AI-written blueprints |
 | 6 | [Database](#6-database-supabase-postgres) | 15 min | Orders surviving restarts + real funnel numbers |
 | 7 | [`NOTION_TEMPLATE_URL`](#7-notion_template_url-the-5-product) | 2 min | Delivering the $5 planner |
-| 8 | [`ADMIN_PASSWORD`](#8-admin_password-the-private-dashboard-at-admin) | 1 min | The `/admin` funnel dashboard |
+| 8 | [`APP_SECRET_PW`](#8-app_secret_pw-the-private-dashboard-at-admin) | 1 min | The `/admin` funnel dashboard |
 
 Steps 2 and 3 together are what turn this into a business. Everything else is
 polish.
@@ -365,18 +365,18 @@ planner section is simply left out of the email rather than sending a dead link.
 
 ---
 
-## 8. `ADMIN_PASSWORD` (the private dashboard at `/admin`)
+## 8. `APP_SECRET_PW` (the private dashboard at `/admin`)
 
 `https://your-site/admin` is a funnel dashboard: how many people land, press the
 quiz button, answer each of the seven questions, reach the offers, press buy,
 reach Stripe, pay, and download what they bought — with a board view, a line
 chart over time, per-product revenue, traffic sources and per-question drop-off.
 
-1. Add `ADMIN_PASSWORD` to Vercel with any password you like
+1. Add `APP_SECRET_PW` to Vercel with any password you like (`ADMIN_PASSWORD` also works)
 2. Make sure `APP_SECRET` is also set — it signs the dashboard session
 3. Redeploy, open `/admin`, enter the password
 
-**There is no default password and no fallback.** With `ADMIN_PASSWORD` unset,
+**There is no default password.** With `APP_SECRET_PW` unset,
 every login is refused rather than the app shipping a value that is printed in
 this public repository. The session is an http-only, `SameSite=Strict` cookie
 that expires after 12 hours; login is rate limited to five attempts a minute.

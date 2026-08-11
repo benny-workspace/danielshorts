@@ -75,7 +75,7 @@ adminRouter.post(
       res.status(503).json({
         error: env.adminPassword
           ? 'APP_SECRET is not set, so an admin session cannot be signed securely.'
-          : 'ADMIN_PASSWORD is not set on this deployment.',
+          : 'APP_SECRET_PW is not set on this deployment.',
         code: 'admin_unconfigured',
       });
       return;
@@ -113,7 +113,7 @@ adminRouter.get(
         ? null
         : env.adminPassword
           ? 'APP_SECRET is missing.'
-          : 'ADMIN_PASSWORD is missing.',
+          : 'APP_SECRET_PW is missing.',
     });
   }),
 );

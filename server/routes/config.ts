@@ -103,7 +103,7 @@ function readiness(): { warnings: string[]; advisories: string[] } {
     advisories.push(
       env.adminPassword
         ? 'The /admin dashboard is closed because APP_SECRET is unset — an admin session cannot be signed securely without it.'
-        : 'ADMIN_PASSWORD is not set, so the /admin dashboard refuses every login.',
+        : 'APP_SECRET_PW is not set, so the /admin dashboard refuses every login.',
     );
   }
 
