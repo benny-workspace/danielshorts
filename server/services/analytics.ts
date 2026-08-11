@@ -32,7 +32,37 @@ export interface TrackInput {
   path?: string | null;
   source?: string | null;
   device?: string | null;
+  country?: string | null;
+  region?: string | null;
   value?: number | null;
+}
+
+/**
+ * Where the request came from, as resolved by the edge from its IP.
+ *
+ * Taken from the platform's headers rather than from a geo-IP lookup or
+ * anything the browser reports: the edge already knows, it costs nothing, and
+ * a client cannot flatter its own location. Vercel sets these in production;
+ * locally they are absent and the fields stay null rather than guessing.
+ */
+export function geoFromRequest(req: {
+  get?(header: string): string | undefined;
+}): { country: string | null; region: string | null } {
+  const read = (header: string) => {
+    const value = req.get?.(header)?.trim();
+    if (!value) return null;
+    // Vercel percent-encodes these, since place names carry accents.
+    try {
+      return decodeURIComponent(value).slice(0, 64);
+    } catch {
+      return value.slice(0, 64);
+    }
+  };
+
+  return {
+    country: read('x-vercel-ip-country'),
+    region: read('x-vercel-ip-country-region'),
+  };
 }
 
 /**
@@ -55,6 +85,8 @@ export async function track(input: TrackInput): Promise<void> {
       path: input.path?.slice(0, 200) ?? null,
       source: input.source?.slice(0, 120) ?? null,
       device: input.device?.slice(0, 20) ?? null,
+      country: input.country?.slice(0, 8) ?? null,
+      region: input.region?.slice(0, 64) ?? null,
       value: Number.isFinite(input.value) ? Number(input.value) : null,
     });
   } catch (error) {
@@ -164,6 +196,8 @@ export interface DashboardData {
   daily: Array<{ day: string; visitors: number; pageViews: number; quizCompletions: number; purchases: number; revenueCents: number }>;
   sources: Array<{ source: string; visitors: number; checkouts: number }>;
   devices: Array<{ device: string; visitors: number }>;
+  countries: Array<{ country: string; visitors: number; checkouts: number }>;
+  regions: Array<{ country: string; region: string; visitors: number; checkouts: number }>;
   archetypes: Array<{ archetype: string; visitors: number }>;
   delivery: { purchases: number; downloadClicks: number; downloadsServed: number; templateClicks: number };
   orders: {
@@ -333,11 +367,19 @@ export async function buildDashboard(days: number): Promise<DashboardData> {
    */
   const firstSource = new Map<string, string>();
   const firstDevice = new Map<string, string>();
+  const firstCountry = new Map<string, string>();
+  const firstRegion = new Map<string, string>();
   const archetypeMap = new Map<string, Set<string>>();
 
   for (const event of events) {
     if (event.source) firstSource.set(event.visitorId, event.source);
     if (event.device) firstDevice.set(event.visitorId, event.device);
+    if (event.country) firstCountry.set(event.visitorId, event.country);
+    // Keyed by country too, because subdivision codes are only unique within
+    // one — "WA" is both Washington and Western Australia.
+    if (event.country && event.region) {
+      firstRegion.set(event.visitorId, `${event.country}-${event.region}`);
+    }
     if (event.archetype && event.name === 'result_view') {
       let set = archetypeMap.get(event.archetype);
       if (!set) archetypeMap.set(event.archetype, (set = new Set()));
@@ -370,6 +412,28 @@ export async function buildDashboard(days: number): Promise<DashboardData> {
   const devices = [...tally(firstDevice).entries()]
     .map(([device, entry]) => ({ device, visitors: entry.visitors }))
     .sort((a, b) => b.visitors - a.visitors);
+
+  const countries = [...tally(firstCountry).entries()]
+    .map(([country, entry]) => ({
+      country,
+      visitors: entry.visitors,
+      checkouts: entry.checkouts,
+    }))
+    .sort((a, b) => b.visitors - a.visitors)
+    .slice(0, 20);
+
+  const regions = [...tally(firstRegion).entries()]
+    .map(([key, entry]) => {
+      const [country, ...rest] = key.split('-');
+      return {
+        country,
+        region: rest.join('-'),
+        visitors: entry.visitors,
+        checkouts: entry.checkouts,
+      };
+    })
+    .sort((a, b) => b.visitors - a.visitors)
+    .slice(0, 15);
 
   const archetypes = [...archetypeMap.entries()]
     .map(([archetype, set]) => ({ archetype, visitors: set.size }))
@@ -417,6 +481,8 @@ export async function buildDashboard(days: number): Promise<DashboardData> {
     daily,
     sources,
     devices,
+    countries,
+    regions,
     archetypes,
     delivery,
     orders: {

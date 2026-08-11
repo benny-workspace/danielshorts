@@ -405,6 +405,14 @@ not eat this. No third-party script, no cookies, and no fingerprinting: a random
 id in `localStorage` identifies a browser and another in `sessionStorage`
 identifies a visit. No email or name is ever written to the events table.
 
+**Location** comes from Vercel's edge, which resolves it from the request before
+your code runs — nothing to configure, and a visitor cannot fake or block it.
+It is recorded down to country and region (state/province) but deliberately not
+city: country and state tell you where to advertise, while a city plus a
+persistent visitor id starts describing a person rather than a market. These
+headers only exist on a real deployment, so the geography panel stays empty when
+you run the site locally.
+
 ---
 
 ## Local development

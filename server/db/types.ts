@@ -77,6 +77,16 @@ export interface AnalyticsEvent {
   /** Referring host, or the utm_source when one was present. */
   source: string | null;
   device: string | null;
+  /**
+   * ISO 3166-1 alpha-2 country, and the subdivision within it, as resolved by
+   * the edge from the request's IP.
+   *
+   * Deliberately stops at region rather than city: country and state are
+   * enough to decide where to advertise, while a city plus a persistent
+   * visitor id starts to describe a person rather than a market.
+   */
+  country: string | null;
+  region: string | null;
   /** Amount in cents on purchase events. */
   value: number | null;
   createdAt: string;

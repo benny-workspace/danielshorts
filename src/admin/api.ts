@@ -57,6 +57,8 @@ export interface DashboardData {
   }>;
   sources: Array<{ source: string; visitors: number; checkouts: number }>;
   devices: Array<{ device: string; visitors: number }>;
+  countries: Array<{ country: string; visitors: number; checkouts: number }>;
+  regions: Array<{ country: string; region: string; visitors: number; checkouts: number }>;
   archetypes: Array<{ archetype: string; visitors: number }>;
   delivery: {
     purchases: number;

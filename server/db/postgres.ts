@@ -70,6 +70,8 @@ function toAnalyticsEvent(row: Row): AnalyticsEvent {
     path: (row.path as string | null) ?? null,
     source: (row.source as string | null) ?? null,
     device: (row.device as string | null) ?? null,
+    country: (row.country as string | null) ?? null,
+    region: (row.region as string | null) ?? null,
     value: row.value === null || row.value === undefined ? null : Number(row.value),
     createdAt: new Date(row.created_at as string).toISOString(),
   };
@@ -303,8 +305,9 @@ export class PostgresDatabase implements Database {
   async recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void> {
     await this.query(
       `insert into analytics_events
-         (name, visitor_id, session_id, tier, step, archetype, path, source, device, value)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+         (name, visitor_id, session_id, tier, step, archetype, path, source, device,
+          country, region, value)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         event.name,
         event.visitorId,
@@ -315,6 +318,8 @@ export class PostgresDatabase implements Database {
         event.path,
         event.source,
         event.device,
+        event.country,
+        event.region,
         event.value,
       ],
     );
