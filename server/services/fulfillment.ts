@@ -3,6 +3,7 @@ import { PRODUCTS, type ProductTier } from '../../shared/products.js';
 import { getDb, type Order } from '../db/index.js';
 import { env, log } from '../env.js';
 import { signDownloadToken } from '../lib/tokens.js';
+import { idsForOrder, track } from './analytics.js';
 import type { BlueprintContent } from './blueprint.js';
 import { sendFulfillmentEmail } from './email.js';
 import { composeBlueprint } from './gemini.js';
@@ -126,6 +127,18 @@ export async function fulfillOrder(params: {
     });
 
     log('fulfilled order', updated.id, 'emailed:', email.sent);
+
+    // Counted here, inside the idempotency guard, so a replayed webhook cannot
+    // inflate the sales figures. Attributed to the order rather than a browser
+    // because fulfilment often runs from Stripe's webhook, where there is no
+    // browser to attribute it to.
+    await track({
+      name: 'purchase',
+      ...idsForOrder(updated.id),
+      tier: updated.productTier as ProductTier,
+      archetype: archetypeId,
+      value: updated.amountPaid,
+    });
 
     return {
       order: updated,

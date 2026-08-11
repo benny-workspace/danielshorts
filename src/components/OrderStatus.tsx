@@ -1,5 +1,6 @@
 import { CheckCircle2, Download, ExternalLink, Loader2, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { track } from '../lib/analytics';
 import { getOrder, type OrderStatus as Order } from '../lib/api';
 import { useMoney } from './primitives';
 
@@ -83,6 +84,7 @@ export function OrderStatusPanel({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href={order.downloadUrl ?? '#'}
+              onClick={() => track('download_click', { tier: order.productTier })}
               className="btn btn-primary w-full sm:w-auto"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,6 +95,7 @@ export function OrderStatusPanel({
             {order.templateUrl ? (
               <a
                 href={order.templateUrl}
+                onClick={() => track('template_click', { tier: order.productTier })}
                 className="btn btn-ghost w-full sm:w-auto"
                 target="_blank"
                 rel="noopener noreferrer"

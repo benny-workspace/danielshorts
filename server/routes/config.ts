@@ -93,9 +93,17 @@ function readiness(): { warnings: string[]; advisories: string[] } {
   }
   // Not a warning: the success screen and the download link both re-verify the
   // purchase against Stripe, so delivery no longer depends on a shared store.
+  // It does, however, decide whether the /admin funnel numbers are real.
   if (!capabilities.postgres) {
     advisories.push(
-      'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history and sign-in will be empty.',
+      'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history, sign-in and the /admin funnel counts will be empty or badly undercounted.',
+    );
+  }
+  if (!capabilities.adminDashboard) {
+    advisories.push(
+      env.adminPassword
+        ? 'The /admin dashboard is closed because APP_SECRET is unset — an admin session cannot be signed securely without it.'
+        : 'ADMIN_PASSWORD is not set, so the /admin dashboard refuses every login.',
     );
   }
 
@@ -133,6 +141,7 @@ configRouter.get(
         postgres: capabilities.postgres,
         notionTemplate: capabilities.notionTemplate,
         appSecret: capabilities.secretConfigured,
+        adminDashboard: capabilities.adminDashboard,
       },
     });
   }),
