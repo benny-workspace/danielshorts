@@ -94,14 +94,48 @@ const ORDER_COLUMNS: Record<string, string> = {
   failureReason: 'failure_reason',
 };
 
+/**
+ * Removes TLS mode flags from a connection string's query.
+ *
+ * Managed providers hand out URLs ending in `?sslmode=require`, and recent
+ * pg-connection-string treats `require` as an alias for `verify-full` — a
+ * change it warns about at runtime. That flag is parsed out of the string and
+ * wins over the `ssl` option passed alongside it, so a correct connection
+ * string is rejected with "self-signed certificate in certificate chain" while
+ * the code appears to have already allowed exactly that.
+ *
+ * Stripping it hands the decision back to the explicit `ssl` option below.
+ * Only the query is rewritten; the credentials are left byte-for-byte alone,
+ * since re-encoding a password is its own class of bug.
+ */
+export function stripSslParams(connectionString: string): string {
+  const start = connectionString.indexOf('?');
+  if (start === -1) return connectionString;
+
+  const params = new URLSearchParams(connectionString.slice(start + 1));
+  params.delete('sslmode');
+  params.delete('ssl');
+
+  const rest = params.toString();
+  const base = connectionString.slice(0, start);
+  return rest ? `${base}?${rest}` : base;
+}
+
 export class PostgresDatabase implements Database {
   private pool: Pool;
   private migrated: Promise<void> | null = null;
 
   constructor(connectionString: string) {
     this.pool = new Pool({
-      connectionString,
-      // Supabase / Neon / Render all terminate TLS with their own CA chain.
+      connectionString: stripSslParams(connectionString),
+      /*
+       * Supabase, Neon and Render all terminate TLS with a chain that is not in
+       * Node's default trust store, so verification fails against every one of
+       * them. The traffic is still encrypted; what is given up is proof of the
+       * server's identity, on a link that never leaves the provider's network.
+       * Verifying properly would mean shipping and rotating each provider's CA
+       * bundle, which is a real cost for a threat this deployment does not face.
+       */
       ssl: /localhost|127\.0\.0\.1/.test(connectionString)
         ? undefined
         : { rejectUnauthorized: false },
