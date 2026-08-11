@@ -107,6 +107,17 @@ export class PostgresDatabase implements Database {
         : { rejectUnauthorized: false },
       max: Number(process.env.PGPOOL_MAX ?? 4),
       idleTimeoutMillis: 15_000,
+      /**
+       * Without this the fallback to the in-memory store is a fiction: an
+       * unreachable host leaves the connection attempt pending indefinitely, so
+       * the first request that touches the database hangs instead of failing,
+       * and on a serverless function it burns the entire invocation budget
+       * before returning a timeout to the visitor.
+       *
+       * Eight seconds is long enough for a cold pooler in a distant region and
+       * short enough to leave room to serve the request from memory afterwards.
+       */
+      connectionTimeoutMillis: 8_000,
     });
   }
 
