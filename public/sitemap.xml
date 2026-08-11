@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One entry, because there is genuinely one page: the quiz, the result and the
+  offers are all stages of a single client-rendered route, not separate URLs.
+  Listing invented paths would only earn soft-404s.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://danielshorts.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

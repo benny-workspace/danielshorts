@@ -235,6 +235,89 @@ export function LineChart({
   );
 }
 
+/* ------------------------------------------------------------- sparkline */
+
+/**
+ * The shape of a number over the window, at tile size.
+ *
+ * A headline figure on its own is not information — 64 visitors is good or bad
+ * entirely depending on whether last week was 30 or 300. This costs one line of
+ * vertical space and supplies the direction the number alone withholds.
+ */
+export function Sparkline({
+  values,
+  color = 'rgb(var(--accent))',
+  height = 28,
+}: {
+  values: number[];
+  color?: string;
+  height?: number;
+}) {
+  if (values.length < 2) return <div style={{ height }} />;
+
+  const width = 120;
+  const max = Math.max(...values, 1);
+  // Inset both ends by the marker radius, so the final dot sits fully inside
+  // the box instead of being sliced in half by the right edge.
+  const inset = 3;
+  const step = (width - inset * 2) / (values.length - 1);
+
+  const points = values.map((value, i) => [
+    inset + i * step,
+    height - (value / max) * (height - 3) - 1.5,
+  ]);
+  const line = points.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const area = `${line} L${width - inset} ${height} L${inset} ${height} Z`;
+  const [lastX, lastY] = points[points.length - 1];
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{ height, width: '100%' }}
+      aria-hidden="true"
+    >
+      <path d={area} fill={color} opacity={0.13} />
+      {/* Non-scaling stroke keeps the line 1.5px however far the viewBox is
+          stretched — without it, preserveAspectRatio="none" smears it. */}
+      <path
+        d={line}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <circle cx={lastX} cy={lastY} r={2} fill={color} vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+/** Period-over-period change, rendered as a coloured delta chip. */
+export function Delta({ current, previous }: { current: number; previous: number }) {
+  // A rise from zero has no meaningful percentage, so it is shown as "new"
+  // rather than as an infinite or arbitrarily large increase.
+  if (previous === 0 && current === 0) return null;
+  if (previous === 0) {
+    return <span className="text-[0.6875rem] text-[rgb(151_208_168)]">new</span>;
+  }
+
+  const change = ((current - previous) / previous) * 100;
+  const flat = Math.abs(change) < 1;
+  const color = flat
+    ? 'var(--color-ivory-3)'
+    : change > 0
+      ? 'rgb(151 208 168)'
+      : 'var(--color-rose-2)';
+
+  return (
+    <span className="text-[0.6875rem] tabular-nums" style={{ color }}>
+      {flat ? '±' : change > 0 ? '↑' : '↓'} {Math.abs(change).toFixed(0)}%
+    </span>
+  );
+}
+
 /* ----------------------------------------------------------------- donut */
 
 export function Donut({

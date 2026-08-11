@@ -18,9 +18,11 @@ import {
 import {
   BarList,
   CHART_COLORS,
+  Delta,
   Donut,
   FunnelBars,
   LineChart,
+  Sparkline,
   formatMoney,
   formatPct,
 } from './charts';
@@ -193,6 +195,21 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
 
   const { totals, delivery } = data;
 
+  /*
+   * Splits the window down the middle so each tile can say whether it is
+   * rising or falling. Comparing the recent half against the one before it is
+   * the only period-over-period read available without a second query, and it
+   * answers the question a bare total cannot: is this getting better?
+   */
+  const split = (pick: (day: DashboardData['daily'][number]) => number) => {
+    const mid = Math.floor(data.daily.length / 2);
+    const sum = (rows: DashboardData['daily']) => rows.reduce((total, d) => total + pick(d), 0);
+    return {
+      current: sum(data.daily.slice(mid)),
+      previous: sum(data.daily.slice(0, mid)),
+    };
+  };
+
   return (
     <div className="min-h-screen bg-ink-950 pb-24">
       {/* ----------------------------------------------------------- head */}
@@ -247,22 +264,37 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
 
         {/* -------------------------------------------------------- tiles */}
         <section className="grid gap-px border border-line-soft bg-line-soft sm:grid-cols-2 lg:grid-cols-4">
-          <Tile label="Visitors" value={String(totals.visitors)} sub={`${totals.pageViews} page views`} />
+          <Tile
+            label="Visitors"
+            value={String(totals.visitors)}
+            sub={`${totals.pageViews} page views`}
+            series={data.daily.map((d) => d.visitors)}
+            split={split((d) => d.visitors)}
+          />
           <Tile
             label="Finished the quiz"
             value={String(totals.quizCompletions)}
             sub={`${formatPct(rate(totals.quizCompletions, totals.visitors))} of visitors`}
+            series={data.daily.map((d) => d.quizCompletions)}
+            split={split((d) => d.quizCompletions)}
+            color={CHART_COLORS[2]}
           />
           <Tile
             label="Sales"
             value={String(totals.purchases)}
             sub={`${formatPct(totals.conversionRate)} of visitors converted`}
+            series={data.daily.map((d) => d.purchases)}
+            split={split((d) => d.purchases)}
+            color={CHART_COLORS[3]}
             accent
           />
           <Tile
             label="Revenue"
             value={formatMoney(totals.revenueCents)}
             sub={`${formatMoney(totals.purchases ? totals.revenueCents / totals.purchases : 0)} per sale`}
+            series={data.daily.map((d) => d.revenueCents)}
+            split={split((d) => d.revenueCents)}
+            color={CHART_COLORS[1]}
             accent
           />
         </section>
@@ -273,38 +305,69 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           blurb="Five columns, one per thing a visitor does. Amber and red cards are the ones costing you money — fix left to right."
         >
           <div className="grid gap-px border border-line-soft bg-line-soft md:grid-cols-3 xl:grid-cols-5">
-            {data.kanban.map((column) => (
-              <div key={column.id} className="flex flex-col bg-ink-900 p-4">
-                <div className="flex items-baseline justify-between gap-2 border-b border-line-soft pb-3">
-                  <p className="label">{column.title}</p>
-                  <span className="numeral text-lg text-ivory">{column.visitors}</span>
-                </div>
-                <div className="mt-3 space-y-2.5">
-                  {column.cards.map((card) => (
-                    <article
-                      key={card.label}
-                      className="border-l-2 bg-ink-800 p-3"
-                      style={{ borderColor: toneColor(card.tone) }}
+            {data.kanban.map((column, index) => {
+              const previous = index > 0 ? data.kanban[index - 1].visitors : 0;
+              const carried = index > 0 ? rate(column.visitors, previous) : 100;
+
+              return (
+                <div key={column.id} className="relative flex flex-col bg-ink-900 p-4">
+                  {/*
+                    The share of the previous column that made it here, printed
+                    on the seam between the two. It turns five separate boxes
+                    into one funnel you can read left to right, and it is the
+                    number that identifies which stage is actually leaking.
+                  */}
+                  {index > 0 ? (
+                    <span
+                      className="absolute -left-px top-0 z-10 hidden -translate-x-1/2 border border-line-soft bg-ink-950 px-1.5 py-0.5 text-[0.625rem] tabular-nums xl:block"
+                      style={{
+                        color:
+                          previous === 0
+                            ? 'var(--color-ivory-3)'
+                            : carried >= 60
+                              ? 'rgb(151 208 168)'
+                              : carried >= 30
+                                ? 'var(--color-gold)'
+                                : 'var(--color-rose-2)',
+                      }}
+                      title={`${column.visitors} of the ${previous} who reached the previous stage`}
                     >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-[0.6875rem] uppercase tracking-[0.12em] text-ivory-3">
-                          {card.label}
+                      {previous === 0 ? '—' : `${carried.toFixed(0)}%`}
+                    </span>
+                  ) : null}
+
+                  <div className="flex items-baseline justify-between gap-2 border-b border-line-soft pb-3">
+                    <p className="label">{column.title}</p>
+                    <span className="numeral text-xl text-ivory">{column.visitors}</span>
+                  </div>
+
+                  <div className="mt-3 space-y-2.5">
+                    {column.cards.map((card) => (
+                      <article
+                        key={card.label}
+                        className="border-l-2 bg-ink-800 p-3 transition-colors hover:bg-ink-700"
+                        style={{ borderColor: toneBorder(card.tone) }}
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-[0.625rem] uppercase tracking-[0.12em] text-ivory-3">
+                            {card.label}
+                          </p>
+                          <span
+                            className="numeral shrink-0 text-base"
+                            style={{ color: toneText(card.tone) }}
+                          >
+                            {card.value}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[0.6875rem] leading-relaxed text-ivory-3">
+                          {card.detail}
                         </p>
-                        <span
-                          className="numeral shrink-0 text-sm"
-                          style={{ color: toneColor(card.tone) }}
-                        >
-                          {card.value}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-[0.6875rem] leading-relaxed text-ivory-3">
-                        {card.detail}
-                      </p>
-                    </article>
-                  ))}
+                      </article>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Section>
 
@@ -668,29 +731,46 @@ function Tile({
   sub,
   accent,
   warn,
+  series,
+  split,
+  color,
 }: {
   label: string;
   value: string;
   sub: string;
   accent?: boolean;
   warn?: boolean;
+  series?: number[];
+  split?: { current: number; previous: number };
+  color?: string;
 }) {
+  const tone = warn
+    ? 'var(--color-gold)'
+    : accent
+      ? 'rgb(var(--accent))'
+      : 'var(--color-ivory)';
+
   return (
-    <div className="bg-ink-900 p-5">
-      <p className="label">{label}</p>
-      <p
-        className="numeral mt-3 text-4xl"
-        style={{
-          color: warn
-            ? 'var(--color-gold)'
-            : accent
-              ? 'rgb(var(--accent))'
-              : 'var(--color-ivory)',
-        }}
-      >
+    <div className="flex flex-col bg-ink-900 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="label">{label}</p>
+        {split ? <Delta current={split.current} previous={split.previous} /> : null}
+      </div>
+
+      <p className="numeral mt-3 text-4xl leading-none" style={{ color: tone }}>
         {value}
       </p>
-      <p className="mt-1.5 text-[0.6875rem] text-ivory-3">{sub}</p>
+      <p className="mt-2 text-[0.6875rem] leading-relaxed text-ivory-3">{sub}</p>
+
+      {series && series.some((v) => v > 0) ? (
+        <div className="mt-4">
+          <Sparkline values={series} color={color ?? tone} />
+        </div>
+      ) : (
+        // Reserves the same height whether or not there is a line to draw, so
+        // one quiet metric cannot shorten its tile and break the row.
+        <div className="mt-4 h-[28px]" />
+      )}
     </div>
   );
 }
@@ -733,11 +813,23 @@ function countryFlag(code: string): string {
   );
 }
 
-function toneColor(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
+/**
+ * A card's tone drives two different things, and they need different values.
+ *
+ * The accent stripe wants a colour that stays quiet when there is nothing
+ * wrong; the figure itself has to stay readable in every case. Sharing one
+ * function between them is what made "plain" numbers render in the border
+ * colour — technically the right hue, and almost invisible as text.
+ */
+function toneBorder(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
   if (tone === 'good') return 'rgb(151 208 168)';
   if (tone === 'warn') return 'var(--color-gold)';
   if (tone === 'bad') return 'var(--color-rose-2)';
   return 'var(--color-line)';
+}
+
+function toneText(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
+  return tone === 'plain' ? 'var(--color-ivory)' : toneBorder(tone);
 }
 
 function statusColor(status: string): string {

@@ -1,0 +1,12 @@
+# K-Drama Dreams
+
+User-agent: *
+Allow: /
+
+# Nothing below is a page: the admin dashboard is private, the API returns
+# JSON, and a download link is single-use and signed. Keeping them out of the
+# index costs nothing and stops crawlers spending their budget on 401s.
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://danielshorts.vercel.app/sitemap.xml

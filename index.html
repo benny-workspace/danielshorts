@@ -11,14 +11,40 @@
       content="Seven scenes, five leads, one romantic archetype. Take the K-Drama Dreams quiz for your love-interest match, compatibility spread, and a cinematic dream-outcome scene."
     />
 
+    <!--
+      Social preview. The card is the first thing anyone sees when this link is
+      pasted into a bio, a pinned comment or a DM, and without og:image it
+      renders as a bare grey link — which is exactly what a summary_large_image
+      card degrades to when there is no image to put in it.
+
+      The URLs are absolute on purpose: Facebook and X resolve them from their
+      own crawlers, where a relative path has nothing to resolve against.
+      /og.jpg is served from public/ rather than from the hashed build output,
+      so the address survives every deploy and stays valid in their caches.
+    -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="K-Drama Dreams" />
+    <meta property="og:url" content="https://danielshorts.vercel.app/" />
+    <meta property="og:image" content="https://danielshorts.vercel.app/og.jpg" />
+    <meta property="og:image:width" content="1376" />
+    <meta property="og:image:height" content="768" />
+    <meta
+      property="og:image:alt"
+      content="A cinematic K-drama scene at golden hour, two leads facing each other."
+    />
     <meta property="og:title" content="Which K-Drama love interest is written for you?" />
     <meta
       property="og:description"
       content="Seven scenes. Five leads. One pattern you have been running for years — find your romantic archetype."
     />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Which K-drama love interest is written for you?" />
+    <meta
+      name="twitter:description"
+      content="Seven scenes. Five leads. One pattern you have been running for years — find your romantic archetype."
+    />
+    <meta name="twitter:image" content="https://danielshorts.vercel.app/og.jpg" />
+    <link rel="canonical" href="https://danielshorts.vercel.app/" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
