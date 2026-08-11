@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type {
+  AnalyticsEvent,
   Database,
   Order,
   QuizAttempt,
@@ -15,7 +16,15 @@ interface Snapshot {
   quizAttempts: QuizAttempt[];
   orders: Order[];
   favorites: SavedFavorite[];
+  events: AnalyticsEvent[];
 }
+
+/**
+ * Ceiling on retained events. Unlike every other record here, events arrive
+ * unprompted and without bound, so the oldest are dropped rather than allowed
+ * to grow a long-running local process without limit.
+ */
+const MAX_EVENTS = 20_000;
 
 /**
  * Zero-dependency store used until DATABASE_URL is set. It persists to a JSON
@@ -28,6 +37,8 @@ export class MemoryDatabase implements Database {
   private quizAttempts = new Map<string, QuizAttempt>();
   private orders = new Map<string, Order>();
   private favorites = new Map<string, SavedFavorite>();
+  /** Append-only and time-ordered, which is how every reader wants it. */
+  private events: AnalyticsEvent[] = [];
 
   private file: string | null;
   private persistable = true;
@@ -52,6 +63,7 @@ export class MemoryDatabase implements Database {
       for (const a of snapshot.quizAttempts ?? []) this.quizAttempts.set(a.id, a);
       for (const o of snapshot.orders ?? []) this.orders.set(o.id, o);
       for (const f of snapshot.favorites ?? []) this.favorites.set(f.id, f);
+      this.events = (snapshot.events ?? []).slice(-MAX_EVENTS);
     } catch (error) {
       const code = (error as NodeJS.ErrnoException).code;
       // A missing file is the normal first-run case; anything else means the
@@ -68,6 +80,7 @@ export class MemoryDatabase implements Database {
       quizAttempts: [...this.quizAttempts.values()],
       orders: [...this.orders.values()],
       favorites: [...this.favorites.values()],
+      events: this.events,
     };
     this.writeQueue = this.writeQueue
       .then(async () => {
@@ -204,6 +217,13 @@ export class MemoryDatabase implements Database {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
+  async listOrdersSince(since: string): Promise<Order[]> {
+    await this.ready();
+    return [...this.orders.values()]
+      .filter((o) => o.createdAt >= since)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
   async addFavorite(userId: string, archetypeId: ArchetypeId): Promise<SavedFavorite> {
     await this.ready();
     const existing = [...this.favorites.values()].find(
@@ -236,5 +256,32 @@ export class MemoryDatabase implements Database {
     return [...this.favorites.values()]
       .filter((f) => f.userId === userId)
       .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  }
+
+  async recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void> {
+    await this.ready();
+    this.events.push({
+      ...event,
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+    });
+    if (this.events.length > MAX_EVENTS) {
+      this.events.splice(0, this.events.length - MAX_EVENTS);
+    }
+    this.persist();
+  }
+
+  async listEvents(since: string, limit: number): Promise<AnalyticsEvent[]> {
+    await this.ready();
+    const window: AnalyticsEvent[] = [];
+    // Walking backwards from the newest lets the scan stop at the first row
+    // outside the window, since the array is already in insertion order.
+    for (let i = this.events.length - 1; i >= 0; i -= 1) {
+      const event = this.events[i];
+      if (event.createdAt < since) break;
+      window.push(event);
+      if (window.length >= limit) break;
+    }
+    return window;
   }
 }

@@ -20,6 +20,7 @@ import {
   usePetals,
   useToast,
 } from './components/primitives';
+import { track, trackOnce } from './lib/analytics';
 import { getConfig, saveQuizResult, type AppConfig } from './lib/api';
 import {
   getFavorites,
@@ -106,6 +107,13 @@ function AppShell() {
   /* --------------------------------------------------------------- boot */
 
   useEffect(() => {
+    // The top of the funnel, and the denominator for every rate on the
+    // dashboard. `trackOnce` because StrictMode runs this effect twice.
+    trackOnce('page_view', 'page_view');
+    if (returnState.current.checkout?.cancelled) {
+      trackOnce('checkout_cancelled', 'checkout_cancelled');
+    }
+
     setFavorites(getFavorites());
 
     const stored = getSession();
@@ -141,15 +149,35 @@ function AppShell() {
     );
   }, [archetype.accent, stage]);
 
+  /*
+   * Tracked from the stage rather than from revealResult, because a reader
+   * returning from Stripe lands straight on the result without passing
+   * through it.
+   */
+  useEffect(() => {
+    if (stage === 'result') trackOnce('result_view', 'result_view', { archetype: winner });
+  }, [stage, winner]);
+
   /* --------------------------------------------------------------- flow */
 
   const startQuiz = useCallback(() => {
+    // Two separate events: pressing the button, and the questionnaire actually
+    // appearing. They should be equal — a gap between them is a bug worth
+    // seeing rather than a copy problem.
+    track('quiz_cta_click');
+    track('quiz_start');
     setAnswers(Array(QUESTIONS.length).fill(null));
     setStage('quiz');
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
   const answerQuestion = useCallback((index: number, choice: ArchetypeId) => {
+    // Once per question, not once per tap: changing an answer is the same
+    // person still on the same question.
+    trackOnce(`question:${index}`, 'question_answered', {
+      step: index + 1,
+      archetype: choice,
+    });
     setAnswers((current) => {
       const next = [...current];
       next[index] = choice;
@@ -160,9 +188,11 @@ function AppShell() {
   const finishQuiz = useCallback(() => {
     const filled = answers.filter(Boolean) as ArchetypeId[];
     const result = scoreQuiz(filled);
+    track('quiz_complete', { archetype: result.winner });
     setWinner(result.winner);
     saveSession({ answers: filled, winner: result.winner });
     setStage('optin');
+    track('optin_view');
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [answers]);
 
@@ -175,6 +205,7 @@ function AppShell() {
   const submitOptIn = useCallback(
     async (submittedEmail: string, submittedName: string) => {
       setSaving(true);
+      track('optin_submit', { archetype: winner });
       setEmail(submittedEmail);
       setName(submittedName);
       saveSession({ email: submittedEmail });
@@ -202,6 +233,7 @@ function AppShell() {
   );
 
   const skipOptIn = useCallback(() => {
+    track('optin_skip', { archetype: winner });
     const filled = answers.filter(Boolean) as ArchetypeId[];
     void saveQuizResult({ answers: filled, winningArchetype: winner })
       .then((saved) => {

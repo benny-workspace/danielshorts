@@ -95,6 +95,13 @@ export const createCheckoutSession = (body: {
   quizAnswers: ArchetypeId[];
   quizAttemptId?: string | null;
   name?: string;
+  /**
+   * The browser's tracking ids. Passed so the server can record "reached
+   * Stripe" against the same visitor who pressed buy, which is what makes the
+   * two halves of the funnel line up.
+   */
+  visitorId?: string;
+  sessionId?: string;
 }) => post<CheckoutResponse>('/api/checkout/create-session', body);
 
 export interface OrderStatus {

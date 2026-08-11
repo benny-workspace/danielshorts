@@ -24,8 +24,9 @@ after each step below to confirm the key actually landed.
 | 3 | [Stripe webhook](#3-stripe-webhook-required-for-delivery) | 10 min | **Automatic delivery** |
 | 4 | [Resend](#4-resend-email) | 10 min | Emailing the PDF + sign-in |
 | 5 | [Gemini](#5-gemini-ai-personalisation) | 5 min | AI-written blueprints |
-| 6 | [Database](#6-database-supabase-postgres) | 15 min | Orders surviving restarts |
+| 6 | [Database](#6-database-supabase-postgres) | 15 min | Orders surviving restarts + real funnel numbers |
 | 7 | [`NOTION_TEMPLATE_URL`](#7-notion_template_url-the-5-product) | 2 min | Delivering the $5 planner |
+| 8 | [`APP_SECRET_PW`](#8-app_secret_pw-the-private-dashboard-at-admin) | 1 min | The `/admin` funnel dashboard |
 
 Steps 2 and 3 together are what turn this into a business. Everything else is
 polish.
@@ -298,11 +299,14 @@ purchase.
 
 ## 6. Database (Supabase Postgres)
 
-Without it, an in-memory store is used. That works fine, but on Vercel each
-serverless instance has its own memory, so **order history and sign-in do not
-survive**. Downloads still work because the emailed link is self-contained.
+Without it, an in-memory store is used. That works fine for selling, but on
+Vercel each serverless instance has its own memory, so **order history, sign-in
+and the `/admin` funnel counts do not survive**. Downloads still work because
+the emailed link is self-contained, and sales and revenue on the dashboard stay
+accurate because they are read from Stripe rather than from events.
 
-Add this when you start caring about customer records.
+Add this when you start caring about customer records — or the moment you want
+the dashboard to tell you the truth.
 
 1. Create a project at <https://supabase.com/dashboard>
 2. **Project Settings → Database → Connection string → Session pooler**
@@ -311,9 +315,9 @@ Add this when you start caring about customer records.
 5. Redeploy
 
 The schema (`server/db/schema.ts`) applies itself on first boot — no migration
-step. It creates `users`, `quiz_attempts`, `orders`, and `saved_favorites`, with
-row-level security on and no public policies, since all access goes through the
-server.
+step. It creates `users`, `quiz_attempts`, `orders`, `saved_favorites` and
+`analytics_events`, with row-level security on and no public policies, since all
+access goes through the server.
 
 If the connection string is wrong, the app logs a warning and falls back to the
 in-memory store rather than going down.
@@ -358,6 +362,48 @@ Two things worth doing in Notion so buyers can actually keep their copy:
 
 Without this variable, the tier still sells and still delivers the PDF — the
 planner section is simply left out of the email rather than sending a dead link.
+
+---
+
+## 8. `APP_SECRET_PW` (the private dashboard at `/admin`)
+
+`https://your-site/admin` is a funnel dashboard: how many people land, press the
+quiz button, answer each of the seven questions, reach the offers, press buy,
+reach Stripe, pay, and download what they bought — with a board view, a line
+chart over time, per-product revenue, traffic sources and per-question drop-off.
+
+1. Add `APP_SECRET_PW` to Vercel with any password you like (`ADMIN_PASSWORD` also works)
+2. Make sure `APP_SECRET` is also set — it signs the dashboard session
+3. Redeploy, open `/admin`, enter the password
+
+**There is no default password.** With `APP_SECRET_PW` unset,
+every login is refused rather than the app shipping a value that is printed in
+this public repository. The session is an http-only, `SameSite=Strict` cookie
+that expires after 12 hours; login is rate limited to five attempts a minute.
+
+### What the numbers mean
+
+- **Counted in visitors, not clicks.** One person reloading five times is one
+  visitor, so the conversion rates are not quietly deflated.
+- **Sales and revenue come from the orders table**, which the payment path
+  writes itself — so they stay correct even for a buyer whose browser blocked
+  the tracking call.
+- **"Pressed buy" vs "reached Stripe"** is the one pair to watch for bugs
+  rather than copy: a gap there means the button failed to open checkout.
+
+### It needs `DATABASE_URL` to be worth reading
+
+Funnel events go to the same store as everything else. Without a database that
+is per-instance memory on Vercel, wiped whenever the instance sleeps — so
+visitor and click counts read far below reality. The dashboard says so in an
+amber banner at the top until you set it. Sales and revenue are unaffected.
+
+### Tracking specifics
+
+First-party and same-origin, so ad blockers that eat hosted analytics tags do
+not eat this. No third-party script, no cookies, and no fingerprinting: a random
+id in `localStorage` identifies a browser and another in `sessionStorage`
+identifies a visit. No email or name is ever written to the events table.
 
 ---
 

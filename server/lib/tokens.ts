@@ -27,7 +27,11 @@ export interface MagicLinkClaims {
   email: string;
 }
 
-type Claims = DownloadClaims | SessionClaims | MagicLinkClaims;
+export interface AdminClaims {
+  kind: 'admin';
+}
+
+type Claims = DownloadClaims | SessionClaims | MagicLinkClaims | AdminClaims;
 
 export function sign(claims: Claims, expiresIn: string | number): string {
   return jwt.sign(claims, env.appSecret, { expiresIn } as jwt.SignOptions);
@@ -73,4 +77,18 @@ export function verifyMagicLinkToken(token: string): MagicLinkClaims | null {
   return verify<MagicLinkClaims>(token, 'magic');
 }
 
+/**
+ * Admin sessions are short by design. The dashboard is read-only, so the cost
+ * of re-entering the password is small next to leaving a live sales dashboard
+ * open on a borrowed laptop.
+ */
+export function signAdminToken(): string {
+  return sign({ kind: 'admin' }, '12h');
+}
+
+export function verifyAdminToken(token: string): AdminClaims | null {
+  return verify<AdminClaims>(token, 'admin');
+}
+
 export const SESSION_COOKIE = 'kdd_session';
+export const ADMIN_COOKIE = 'kdd_admin';

@@ -64,6 +64,16 @@ export const env = {
   databaseUrl: str('DATABASE_URL'),
   /** Signs download tokens and magic links. Falls back to an ephemeral value. */
   appSecret: str('APP_SECRET', 'dev-only-insecure-secret-change-me'),
+  /**
+   * Opens the /admin dashboard. There is no default: unset means the dashboard
+   * refuses every login rather than shipping a guessable one, which matters
+   * because this repository is public.
+   *
+   * Note this is a password to type, and quite separate from APP_SECRET above,
+   * which is a signing key nobody ever types. `ADMIN_PASSWORD` is accepted as
+   * an alias so either name works.
+   */
+  adminPassword: str('APP_SECRET_PW', str('ADMIN_PASSWORD')),
 
   storageBucketUrl: str('STORAGE_BUCKET_URL'),
   /** Where generated PDFs land when no bucket is configured. */
@@ -117,6 +127,14 @@ export const capabilities = {
   },
   get secretConfigured() {
     return env.appSecret !== 'dev-only-insecure-secret-change-me';
+  },
+  /**
+   * The dashboard needs both: a password to check, and a real APP_SECRET to
+   * sign the resulting session with. Signing an admin cookie with the published
+   * development secret would let anyone who read the source mint one.
+   */
+  get adminDashboard() {
+    return Boolean(env.adminPassword) && capabilities.secretConfigured;
   },
 };
 

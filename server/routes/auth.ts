@@ -1,7 +1,7 @@
 import { Router, type Request } from 'express';
 import { getDb } from '../db/index.js';
 import { capabilities, env, resolveAppUrl } from '../env.js';
-import { asyncRoute, parseEmail, rateLimit } from '../lib/http.js';
+import { asyncRoute, parseEmail, rateLimit, readCookie } from '../lib/http.js';
 import { sendMagicLinkEmail } from '../services/email.js';
 import {
   SESSION_COOKIE,
@@ -12,16 +12,6 @@ import {
 } from '../lib/tokens.js';
 
 export const authRouter = Router();
-
-function readCookie(req: Request, name: string): string | null {
-  const header = req.headers.cookie;
-  if (!header) return null;
-  for (const part of header.split(';')) {
-    const [key, ...rest] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(rest.join('='));
-  }
-  return null;
-}
 
 export async function currentUser(req: Request) {
   const token = readCookie(req, SESSION_COOKIE);

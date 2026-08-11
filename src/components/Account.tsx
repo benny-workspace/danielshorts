@@ -1,6 +1,7 @@
 import type { ArchetypeId } from '@shared/archetypes';
 import { Download, ExternalLink, Loader2, LogOut, Mail } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { track } from '../lib/analytics';
 import {
   getMe,
   getOrders,
@@ -132,6 +133,7 @@ export function AccountSheet({
                         {order.downloadUrl ? (
                           <a
                             href={order.downloadUrl}
+                            onClick={() => track('download_click')}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-xs text-[rgb(var(--accent))] transition-opacity hover:opacity-80"
@@ -143,6 +145,7 @@ export function AccountSheet({
                         {order.templateUrl ? (
                           <a
                             href={order.templateUrl}
+                            onClick={() => track('template_click')}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-xs text-ivory-2 transition-opacity hover:opacity-80"

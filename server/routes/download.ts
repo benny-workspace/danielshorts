@@ -3,6 +3,7 @@ import { getDb } from '../db/index.js';
 import { log, resolveAppUrl } from '../env.js';
 import { asyncRoute, rateLimit } from '../lib/http.js';
 import { verifyDownloadToken } from '../lib/tokens.js';
+import { idsForOrder, track } from '../services/analytics.js';
 import { renderOrderPdf } from '../services/fulfillment.js';
 import { recoverOrderFromSession } from '../services/orders.js';
 
@@ -54,6 +55,16 @@ downloadRouter.get(
     }
 
     const pdf = await renderOrderPdf(order);
+
+    // The click is tracked in the browser and the delivery is tracked here.
+    // Both are worth having: the difference between them is a customer who
+    // pressed download and got nothing.
+    await track({
+      name: 'download_served',
+      ...idsForOrder(order.id),
+      tier: order.productTier,
+      archetype: order.winningArchetype,
+    });
 
     res
       .status(200)

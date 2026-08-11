@@ -4,6 +4,7 @@ import { env } from './env.js';
 import { HttpError } from './lib/http.js';
 import { adminRouter } from './routes/admin.js';
 import { aiRouter } from './routes/ai.js';
+import { analyticsRouter } from './routes/analytics.js';
 import { authRouter } from './routes/auth.js';
 import { checkoutRouter } from './routes/checkout.js';
 import { configRouter } from './routes/config.js';
@@ -49,6 +50,7 @@ export function createApiApp(): Express {
   app.use('/api/user', userRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/download', downloadRouter);
+  app.use('/api/analytics', analyticsRouter);
   app.use('/api/admin', adminRouter);
 
   app.use('/api', (_req, res) => {

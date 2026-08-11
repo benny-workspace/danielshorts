@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { SCHEMA_SQL } from './schema.js';
 import type {
+  AnalyticsEvent,
   Database,
   Order,
   OrderStatus,
@@ -8,6 +9,7 @@ import type {
   SavedFavorite,
   User,
 } from './types.js';
+import type { EventName } from '../../shared/analytics.js';
 import type { ArchetypeId } from '../../shared/archetypes.js';
 import type { ProductTier } from '../../shared/products.js';
 import { log } from '../env.js';
@@ -53,6 +55,23 @@ function toOrder(row: Row): Order {
     failureReason: (row.failure_reason as string | null) ?? null,
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString(),
+  };
+}
+
+function toAnalyticsEvent(row: Row): AnalyticsEvent {
+  return {
+    id: String(row.id),
+    name: row.name as EventName,
+    visitorId: String(row.visitor_id),
+    sessionId: String(row.session_id),
+    tier: (row.tier as AnalyticsEvent['tier']) ?? null,
+    step: row.step === null || row.step === undefined ? null : Number(row.step),
+    archetype: (row.archetype as string | null) ?? null,
+    path: (row.path as string | null) ?? null,
+    source: (row.source as string | null) ?? null,
+    device: (row.device as string | null) ?? null,
+    value: row.value === null || row.value === undefined ? null : Number(row.value),
+    createdAt: new Date(row.created_at as string).toISOString(),
   };
 }
 
@@ -237,6 +256,14 @@ export class PostgresDatabase implements Database {
     return rows.map(toOrder);
   }
 
+  async listOrdersSince(since: string): Promise<Order[]> {
+    const rows = await this.query(
+      'select * from orders where created_at >= $1 order by created_at desc',
+      [since],
+    );
+    return rows.map(toOrder);
+  }
+
   async addFavorite(userId: string, archetypeId: ArchetypeId): Promise<SavedFavorite> {
     const rows = await this.query(
       `insert into saved_favorites (user_id, archetype_id) values ($1, $2)
@@ -271,5 +298,36 @@ export class PostgresDatabase implements Database {
       archetypeId: row.archetype_id as ArchetypeId,
       savedAt: new Date(row.saved_at as string).toISOString(),
     }));
+  }
+
+  async recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void> {
+    await this.query(
+      `insert into analytics_events
+         (name, visitor_id, session_id, tier, step, archetype, path, source, device, value)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        event.name,
+        event.visitorId,
+        event.sessionId,
+        event.tier,
+        event.step,
+        event.archetype,
+        event.path,
+        event.source,
+        event.device,
+        event.value,
+      ],
+    );
+  }
+
+  async listEvents(since: string, limit: number): Promise<AnalyticsEvent[]> {
+    const rows = await this.query(
+      `select * from analytics_events
+       where created_at >= $1
+       order by created_at desc
+       limit $2`,
+      [since, limit],
+    );
+    return rows.map(toAnalyticsEvent);
   }
 }

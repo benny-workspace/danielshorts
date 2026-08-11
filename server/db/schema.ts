@@ -53,6 +53,24 @@ create table if not exists saved_favorites (
   unique (user_id, archetype_id)
 );
 
+-- One row per funnel step taken by one visitor. Anonymous by construction:
+-- visitor_id and session_id are random ids minted in the browser, never an IP
+-- or a fingerprint, and nothing here identifies a person.
+create table if not exists analytics_events (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  visitor_id text not null,
+  session_id text not null,
+  tier       text,
+  step       integer,
+  archetype  text,
+  path       text,
+  source     text,
+  device     text,
+  value      integer,
+  created_at timestamptz not null default now()
+);
+
 -- Added after the initial release; keeps existing deployments migrating cleanly.
 alter table orders add column if not exists blueprint jsonb;
 
@@ -61,10 +79,16 @@ create index if not exists orders_created_at_idx   on orders (created_at desc);
 create index if not exists quiz_attempts_user_idx  on quiz_attempts (user_id);
 create index if not exists favorites_user_idx      on saved_favorites (user_id);
 
+-- Every dashboard query is "events since <timestamp>", so this one index
+-- carries all of them.
+create index if not exists events_created_at_idx   on analytics_events (created_at desc);
+create index if not exists events_name_idx         on analytics_events (name, created_at desc);
+
 -- All access goes through the server using the service role / direct
 -- connection string, so RLS stays on with no public policies attached.
-alter table users          enable row level security;
-alter table quiz_attempts  enable row level security;
-alter table orders         enable row level security;
-alter table saved_favorites enable row level security;
+alter table users            enable row level security;
+alter table quiz_attempts    enable row level security;
+alter table orders           enable row level security;
+alter table saved_favorites  enable row level security;
+alter table analytics_events enable row level security;
 `;

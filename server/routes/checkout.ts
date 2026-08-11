@@ -5,6 +5,7 @@ import { scoreQuiz } from '../../shared/questions.js';
 import { getDb } from '../db/index.js';
 import { capabilities, env, log, resolveAppUrl } from '../env.js';
 import { asyncRoute, badRequest, optionalString, parseEmail, rateLimit } from '../lib/http.js';
+import { idsForOrder, track } from '../services/analytics.js';
 import { resolvePriceId } from '../services/catalog.js';
 import { recoverOrderFromSession } from '../services/orders.js';
 import { buildPaymentLinkUrl, createCheckoutSession } from '../services/stripe.js';
@@ -41,6 +42,12 @@ checkoutRouter.post(
       : answers.length
         ? scoreQuiz(answers).winner
         : 'best_friend';
+
+    // Optional: the browser passes the ids it is already tracking with, so the
+    // server-side half of the funnel lines up with the client-side half.
+    const visitorId = optionalString(req.body?.visitorId, 64);
+    const sessionId = optionalString(req.body?.sessionId, 64);
+    const visitorIds = visitorId && sessionId ? { visitorId, sessionId } : {};
 
     const db = await getDb();
     const user = await db.upsertUser(email, name);
@@ -103,6 +110,21 @@ checkoutRouter.post(
 
       await db.updateOrder(order.id, { stripeSessionId: session.id });
       log('created stripe checkout session', session.id, 'for order', order.id);
+
+      // Recorded here rather than in the browser because this is the moment
+      // that actually matters: the buyer reached a working payment page. A
+      // click that failed to open checkout is a click, never a session — which
+      // is exactly the gap worth being able to see.
+      await track({
+        name: 'checkout_session',
+        ...idsForOrder(order.id),
+        // The browser's own ids when it sent them, so the click and the session
+        // belong to one person in the funnel rather than two.
+        ...visitorIds,
+        tier,
+        archetype,
+        value: product.amount,
+      });
 
       res.json({
         mode: 'stripe_checkout',

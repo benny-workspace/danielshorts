@@ -1,8 +1,9 @@
 import type { ArchetypeId } from '@shared/archetypes';
 import type { ProductTier } from '@shared/products';
 import { ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { image } from '../assets';
+import { track, trackingIds, trackOnce } from '../lib/analytics';
 import { createCheckoutSession, type AppConfig, type PublicProduct } from '../lib/api';
 import { Reveal, useMoney, useToast } from './primitives';
 
@@ -31,9 +32,35 @@ export function Offers({
   const money = useMoney();
   const [pending, setPending] = useState<ProductTier | null>(null);
   const [emailPrompt, setEmailPrompt] = useState(email ?? '');
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const products = config?.products ?? [];
   const checkoutEnabled = config?.features.checkout ?? false;
+
+  /*
+   * "Reached the offers" means the cards were actually on screen, not merely
+   * mounted — this section renders below the result, so most of the page can
+   * exist without anyone ever scrolling far enough to see the prices.
+   */
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          trackOnce('offers_view', 'offers_view', { archetype: winner });
+          observer.disconnect();
+        }
+      },
+      // A third of the block visible is a fair reading of "saw the offers".
+      { threshold: 0.33 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [winner]);
 
   const buy = async (product: PublicProduct) => {
     const buyerEmail = (email ?? emailPrompt).trim();
@@ -41,6 +68,15 @@ export function Offers({
       toast('Add your email above so we know where to send it.', 'error');
       return;
     }
+
+    // Recorded before the request, so a checkout that fails to open is still
+    // counted as intent. The gap between this and "reached Stripe" on the
+    // dashboard is exactly the failure the last release fixed.
+    track('checkout_click', {
+      tier: product.tier,
+      archetype: winner,
+      value: product.amount,
+    });
 
     setPending(product.tier);
     try {
@@ -51,6 +87,7 @@ export function Offers({
         quizAnswers: answers,
         quizAttemptId: attemptId,
         name,
+        ...trackingIds(),
       });
 
       if (session.url) {
@@ -68,7 +105,7 @@ export function Offers({
   if (!products.length) return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-28">
+    <section ref={sectionRef} className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-28">
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
