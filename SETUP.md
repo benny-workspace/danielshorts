@@ -310,9 +310,27 @@ the dashboard to tell you the truth.
 
 1. Create a project at <https://supabase.com/dashboard>
 2. **Project Settings → Database → Connection string → Session pooler**
-3. Copy the URI and replace `[YOUR-PASSWORD]` with your database password
-4. Add to Vercel as `DATABASE_URL`
+3. Copy the URI and replace `[YOUR-PASSWORD]` — **including the square
+   brackets** — with your database password
+4. Add to Vercel as `DATABASE_URL` (that exact name), ticked for Production
 5. Redeploy
+
+> **It must be the pooler string, not the direct one.** The direct host,
+> `db.<ref>.supabase.co`, publishes an IPv6 address and no IPv4 one. Vercel's
+> functions have no IPv6 egress, so that host can never resolve there however
+> correct the password is — you get a bare `ENOTFOUND` and a silent fall back to
+> the in-memory store. The pooler host is dual-stack and works:
+>
+> | | Direct (**will not work on Vercel**) | Session pooler (use this) |
+> |---|---|---|
+> | Host | `db.<ref>.supabase.co` | `aws-0-<region>.pooler.supabase.com` |
+> | User | `postgres` | `postgres.<ref>` |
+>
+> Note the username differs too — the pooler needs the project ref appended, and
+> copying only the hostname across is the usual way this goes wrong.
+
+`GET /api/config/health` names both of these mistakes explicitly if you hit
+them, rather than leaving you to guess from a connection error.
 
 The schema (`server/db/schema.ts`) applies itself on first boot — no migration
 step. It creates `users`, `quiz_attempts`, `orders`, `saved_favorites` and

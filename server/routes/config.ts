@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PRODUCTS, PRODUCT_TIERS } from '../../shared/products.js';
 import { getActiveDriver, getDb } from '../db/index.js';
-import { capabilities, env } from '../env.js';
+import { capabilities, diagnoseDatabaseUrl, env } from '../env.js';
 import { asyncRoute } from '../lib/http.js';
 import { getCatalog } from '../services/catalog.js';
 
@@ -99,6 +99,12 @@ function readiness(): { warnings: string[]; advisories: string[] } {
       'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history, sign-in and the /admin funnel counts will be empty or badly undercounted.',
     );
   }
+
+  // A malformed connection string is worse than a missing one: the app looks
+  // configured, silently falls back to memory, and the only clue is a line in
+  // the runtime log nobody reads. Say exactly what is wrong with it.
+  const databaseProblem = diagnoseDatabaseUrl();
+  if (databaseProblem) advisories.push(databaseProblem);
   if (!capabilities.adminDashboard) {
     advisories.push(
       env.adminPassword

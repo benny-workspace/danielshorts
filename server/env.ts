@@ -139,6 +139,32 @@ export const capabilities = {
 };
 
 /**
+ * Catches the two ways a Supabase connection string is normally wrong, both of
+ * which otherwise surface only as a buried DNS or auth error while the app
+ * quietly serves from memory as though nothing happened.
+ *
+ * Returns a sentence naming the fix, or null when the string looks usable.
+ */
+export function diagnoseDatabaseUrl(url = env.databaseUrl): string | null {
+  if (!url) return null;
+
+  // Supabase writes the password as [YOUR-PASSWORD]; the brackets are part of
+  // the placeholder, not the value, and are easy to paste along with it.
+  if (/:\[[^\]]*\]@/.test(url)) {
+    return 'DATABASE_URL still has square brackets around the password. Those are part of Supabase’s placeholder — delete them, keeping only the password itself.';
+  }
+
+  // db.<ref>.supabase.co publishes an AAAA record and no A record. Vercel's
+  // functions have no IPv6 egress, so this host can never resolve there no
+  // matter how correct the credentials are. The pooler is dual-stack.
+  if (/@db\.[a-z0-9]+\.supabase\.co/i.test(url)) {
+    return 'DATABASE_URL points at Supabase’s direct host (db.<ref>.supabase.co), which is IPv6-only and unreachable from Vercel. Use the Session pooler string instead — its host looks like aws-0-<region>.pooler.supabase.com and its user is postgres.<ref>.';
+  }
+
+  return null;
+}
+
+/**
  * The origin to build user-facing links from, most-specific first: an explicit
  * APP_URL, then the host the request actually arrived on (so links match the
  * domain the reader is using), then Vercel's stable production domain.

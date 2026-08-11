@@ -1,4 +1,4 @@
-import { capabilities, env, log } from '../env.js';
+import { capabilities, diagnoseDatabaseUrl, env, log } from '../env.js';
 import { MemoryDatabase } from './memory.js';
 import type { Database } from './types.js';
 
@@ -29,6 +29,10 @@ export async function getDb(): Promise<Database> {
         '[kdrama] postgres unavailable, falling back to in-memory store:',
         (error as Error).message,
       );
+      // The raw driver error for the common mistakes is an opaque ENOTFOUND or
+      // password failure, so the actionable version goes right beside it.
+      const problem = diagnoseDatabaseUrl();
+      if (problem) console.error('[kdrama]', problem);
     }
   }
 
