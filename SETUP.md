@@ -332,6 +332,37 @@ the dashboard to tell you the truth.
 `GET /api/config/health` names both of these mistakes explicitly if you hit
 them, rather than leaving you to guess from a connection error.
 
+### Or just connect Supabase to Vercel from their dashboards
+
+Supabase's Vercel integration wires the two together for you — but it **does not
+create a `DATABASE_URL`**. It injects its own names:
+
+```
+POSTGRES_URL              ← pooled, what this app prefers
+POSTGRES_PRISMA_URL       ← pooled, with pgbouncer flags
+POSTGRES_URL_NON_POOLING  ← direct, and therefore IPv6-only
+SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, …
+```
+
+All of them are read automatically, in that order, so there is nothing to
+rename after connecting the integration. An explicit `DATABASE_URL` still wins
+when present. `SUPABASE_URL` also gives the PDF archive bucket its address, so
+storage needs no separate configuration either.
+
+### Reading the health report
+
+`database.source` names the variable the string was actually read from, which
+splits apart two failures that used to look identical:
+
+| `driver` | `source` | Meaning |
+|---|---|---|
+| `postgres` | `POSTGRES_URL` | Connected. Nothing to do. |
+| `memory` | `null` | No connection string found under any name. |
+| `memory` | `POSTGRES_URL` | **Found it, and connecting failed.** The driver error is in the runtime logs. |
+
+That last row is the one that used to be invisible — it reported `postgres:
+true` while every write went to memory.
+
 The schema (`server/db/schema.ts`) applies itself on first boot — no migration
 step. It creates `users`, `quiz_attempts`, `orders`, `saved_favorites` and
 `analytics_events`, with row-level security on and no public policies, since all

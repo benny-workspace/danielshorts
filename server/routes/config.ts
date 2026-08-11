@@ -64,7 +64,10 @@ configRouter.get(
  * worth reading — a flag that stays false over a missing nice-to-have is a
  * flag nobody looks at twice.
  */
-function readiness(): { warnings: string[]; advisories: string[] } {
+function readiness(activeDriver: 'postgres' | 'memory'): {
+  warnings: string[];
+  advisories: string[];
+} {
   const warnings: string[] = [];
   const advisories: string[] = [];
 
@@ -96,7 +99,7 @@ function readiness(): { warnings: string[]; advisories: string[] } {
   // It does, however, decide whether the /admin funnel numbers are real.
   if (!capabilities.postgres) {
     advisories.push(
-      'No DATABASE_URL. Purchases are recovered from Stripe so downloads still work, but order history, sign-in and the /admin funnel counts will be empty or badly undercounted.',
+      'No database connection string found. Checked DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL and POSTGRES_URL_NON_POOLING. Purchases are recovered from Stripe so downloads still work, but order history, sign-in and the /admin funnel counts will be empty or badly undercounted.',
     );
   }
 
@@ -105,6 +108,15 @@ function readiness(): { warnings: string[]; advisories: string[] } {
   // the runtime log nobody reads. Say exactly what is wrong with it.
   const databaseProblem = diagnoseDatabaseUrl();
   if (databaseProblem) advisories.push(databaseProblem);
+
+  // The state that used to be invisible: credentials were found and the
+  // connection still failed. Without this the report says `postgres: true`
+  // while every write is going to memory, which reads as success.
+  if (capabilities.postgres && activeDriver !== 'postgres') {
+    advisories.push(
+      `A connection string was found in ${env.databaseUrlSource ?? 'the environment'}, but connecting to it failed — the app is serving from the in-memory store. The driver error is in the runtime logs.`,
+    );
+  }
   if (!capabilities.adminDashboard) {
     advisories.push(
       env.adminPassword
@@ -127,7 +139,7 @@ configRouter.get(
       database = (error as Error).message;
     }
 
-    const { warnings, advisories } = readiness();
+    const { warnings, advisories } = readiness(getActiveDriver());
 
     res.json({
       status: 'ok',
@@ -137,7 +149,15 @@ configRouter.get(
       advisories,
       stripeMode: capabilities.stripe ? (capabilities.stripeLiveMode ? 'live' : 'test') : null,
       env: env.nodeEnv,
-      database: { driver: getActiveDriver(), status: database },
+      database: {
+        driver: getActiveDriver(),
+        status: database,
+        // Names the variable the string was read from. When the driver says
+        // "memory" but this says "POSTGRES_URL", the credentials were found and
+        // the connection failed — a completely different problem from not
+        // having configured one, and previously indistinguishable from outside.
+        source: env.databaseUrlSource,
+      },
       integrations: {
         stripe: capabilities.stripe,
         stripeWebhooks: capabilities.stripeWebhooks,

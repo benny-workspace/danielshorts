@@ -11,6 +11,42 @@ function bool(name: string, fallback = false): boolean {
   return /^(1|true|yes|on)$/i.test(value.trim());
 }
 
+/** First of these variables that holds a value, with the name it came from. */
+function firstOf(names: readonly string[]): { value: string; source: string | null } {
+  for (const name of names) {
+    const value = str(name);
+    if (value) return { value, source: name };
+  }
+  return { value: '', source: null };
+}
+
+/**
+ * Where a Postgres connection string might be, most explicit first.
+ *
+ * Only the first is ours. The rest are what Vercel's Supabase integration
+ * injects when you connect the two through their dashboards — it never creates
+ * a `DATABASE_URL`, so an app that reads only that name sits next to a
+ * perfectly good database and reports having none.
+ *
+ * Order matters beyond precedence: the pooled URLs come before the non-pooled
+ * one because the latter points at db.<ref>.supabase.co, which publishes no
+ * IPv4 address and so cannot be reached from a Vercel function at all.
+ */
+const DATABASE_URL_VARS = [
+  'DATABASE_URL',
+  'POSTGRES_URL',
+  'POSTGRES_PRISMA_URL',
+  'POSTGRES_URL_NON_POOLING',
+] as const;
+
+const resolvedDatabase = firstOf(DATABASE_URL_VARS);
+
+/** Supabase's own URL, injected by the same integration. */
+const resolvedSupabaseUrl = firstOf([
+  'SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_URL',
+]).value.replace(/\/$/, '');
+
 export const env = {
   nodeEnv: str('NODE_ENV', 'development'),
   port: Number(str('PORT', '3000')),
@@ -61,7 +97,10 @@ export const env = {
   mailFrom: str('MAIL_FROM', 'K-Drama Dreams <onboarding@resend.dev>'),
   mailReplyTo: str('MAIL_REPLY_TO'),
 
-  databaseUrl: str('DATABASE_URL'),
+  databaseUrl: resolvedDatabase.value,
+  /** Which variable the connection string actually came from, for diagnostics. */
+  databaseUrlSource: resolvedDatabase.source,
+  supabaseUrl: resolvedSupabaseUrl,
   /** Signs download tokens and magic links. Falls back to an ephemeral value. */
   appSecret: str('APP_SECRET', 'dev-only-insecure-secret-change-me'),
   /**
@@ -75,7 +114,15 @@ export const env = {
    */
   adminPassword: str('APP_SECRET_PW', str('ADMIN_PASSWORD')),
 
-  storageBucketUrl: str('STORAGE_BUCKET_URL'),
+  /**
+   * Bucket to archive generated PDFs into. Derived from the Supabase URL when
+   * not set explicitly, since the integration hands us the project URL and the
+   * service key already — an upload only ever runs when both are present, and
+   * a missing bucket is caught and ignored by the caller.
+   */
+  storageBucketUrl:
+    str('STORAGE_BUCKET_URL') ||
+    (resolvedSupabaseUrl ? `${resolvedSupabaseUrl}/storage/v1/object/blueprints` : ''),
   /** Where generated PDFs land when no bucket is configured. */
   localStorageDir: str('LOCAL_STORAGE_DIR', '.data/files'),
 

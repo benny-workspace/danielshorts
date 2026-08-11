@@ -22,8 +22,13 @@ export async function persistFile(
   contentType = 'application/pdf',
 ): Promise<StoredFile> {
   const bucketUrl = env.storageBucketUrl.replace(/\/$/, '');
+  // Supabase's newer secret keys arrive as SUPABASE_SECRET_KEY; the Vercel
+  // integration still injects the older SUPABASE_SERVICE_ROLE_KEY. Either one
+  // authorises an upload, so accept whichever is present.
   const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.STORAGE_API_KEY?.trim();
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
+    process.env.STORAGE_API_KEY?.trim();
 
   if (bucketUrl && serviceKey) {
     try {
