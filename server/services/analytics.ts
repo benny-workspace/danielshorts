@@ -72,23 +72,33 @@ export function geoFromRequest(req: {
  * when the response is sent may be frozen before it runs, so a fire-and-forget
  * insert would be lost precisely when traffic is highest.
  */
+function normalize(input: TrackInput) {
+  return {
+    name: input.name,
+    visitorId: input.visitorId.slice(0, 64),
+    sessionId: input.sessionId.slice(0, 64),
+    tier: input.tier ?? null,
+    step: Number.isFinite(input.step) ? Number(input.step) : null,
+    archetype: input.archetype?.slice(0, 40) ?? null,
+    path: input.path?.slice(0, 200) ?? null,
+    source: input.source?.slice(0, 120) ?? null,
+    device: input.device?.slice(0, 20) ?? null,
+    country: input.country?.slice(0, 8) ?? null,
+    region: input.region?.slice(0, 64) ?? null,
+    value: Number.isFinite(input.value) ? Number(input.value) : null,
+  };
+}
+
 export async function track(input: TrackInput): Promise<void> {
+  await trackAll([input]);
+}
+
+/** Records a whole batch in one round trip. Never throws and never rejects. */
+export async function trackAll(inputs: TrackInput[]): Promise<void> {
+  if (!inputs.length) return;
   try {
     const db = await getDb();
-    await db.recordEvent({
-      name: input.name,
-      visitorId: input.visitorId.slice(0, 64),
-      sessionId: input.sessionId.slice(0, 64),
-      tier: input.tier ?? null,
-      step: Number.isFinite(input.step) ? Number(input.step) : null,
-      archetype: input.archetype?.slice(0, 40) ?? null,
-      path: input.path?.slice(0, 200) ?? null,
-      source: input.source?.slice(0, 120) ?? null,
-      device: input.device?.slice(0, 20) ?? null,
-      country: input.country?.slice(0, 8) ?? null,
-      region: input.region?.slice(0, 64) ?? null,
-      value: Number.isFinite(input.value) ? Number(input.value) : null,
-    });
+    await db.recordEvents(inputs.map(normalize));
   } catch (error) {
     log('analytics write failed:', (error as Error).message);
   }

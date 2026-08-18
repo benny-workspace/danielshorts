@@ -259,12 +259,19 @@ export class MemoryDatabase implements Database {
   }
 
   async recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void> {
+    await this.recordEvents([event]);
+  }
+
+  async recordEvents(
+    events: Array<Omit<AnalyticsEvent, 'id' | 'createdAt'>>,
+  ): Promise<void> {
+    if (!events.length) return;
     await this.ready();
-    this.events.push({
-      ...event,
-      id: randomUUID(),
-      createdAt: new Date().toISOString(),
-    });
+
+    const now = new Date().toISOString();
+    for (const event of events) {
+      this.events.push({ ...event, id: randomUUID(), createdAt: now });
+    }
     if (this.events.length > MAX_EVENTS) {
       this.events.splice(0, this.events.length - MAX_EVENTS);
     }
