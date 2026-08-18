@@ -348,25 +348,44 @@ export class PostgresDatabase implements Database {
   }
 
   async recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void> {
+    await this.recordEvents([event]);
+  }
+
+  async recordEvents(
+    events: Array<Omit<AnalyticsEvent, 'id' | 'createdAt'>>,
+  ): Promise<void> {
+    if (!events.length) return;
+
+    const COLUMNS = 12;
+    // One multi-row INSERT rather than one statement per event: the caller has
+    // to wait for this to finish before it can answer, so the round trips are
+    // the cost that matters, not the row count.
+    const tuples = events.map((_, row) => {
+      const base = row * COLUMNS;
+      return `(${Array.from({ length: COLUMNS }, (__, i) => `$${base + i + 1}`).join(', ')})`;
+    });
+
+    const values = events.flatMap((event) => [
+      event.name,
+      event.visitorId,
+      event.sessionId,
+      event.tier,
+      event.step,
+      event.archetype,
+      event.path,
+      event.source,
+      event.device,
+      event.country,
+      event.region,
+      event.value,
+    ]);
+
     await this.query(
       `insert into analytics_events
          (name, visitor_id, session_id, tier, step, archetype, path, source, device,
           country, region, value)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-      [
-        event.name,
-        event.visitorId,
-        event.sessionId,
-        event.tier,
-        event.step,
-        event.archetype,
-        event.path,
-        event.source,
-        event.device,
-        event.country,
-        event.region,
-        event.value,
-      ],
+       values ${tuples.join(', ')}`,
+      values,
     );
   }
 

@@ -7,7 +7,8 @@ import {
   geoFromRequest,
   looksLikeBot,
   normalizeSource,
-  track,
+  trackAll,
+  type TrackInput,
 } from '../services/analytics.js';
 
 export const analyticsRouter = Router();
@@ -41,6 +42,17 @@ interface IncomingEvent {
  *
  * Always answers 204. `navigator.sendBeacon` discards the response, and a
  * visitor should never see a tracking failure.
+ *
+ * The write is awaited BEFORE answering, which looks like the wrong trade and
+ * is not. This ran the other way round at first — answer immediately, write
+ * afterwards, to keep latency off the page — and that is safe only while the
+ * write finishes in the same tick, as it does against an in-process store. The
+ * moment a real database was attached, every event in this route was lost:
+ * serverless instances are frozen as soon as the response is flushed, so a
+ * pending round trip to Postgres simply never resumes. Nothing here is on the
+ * visitor's critical path anyway — the browser sends these with `keepalive` or
+ * `sendBeacon` and never waits for the reply — so the latency being protected
+ * was latency nobody could observe, paid for with the data itself.
  */
 analyticsRouter.post(
   '/track',
@@ -48,10 +60,10 @@ analyticsRouter.post(
   asyncRoute(async (req, res) => {
     const userAgent = req.get('user-agent') ?? undefined;
 
-    // Answer before doing the work, so tracking never adds latency to a page.
-    res.status(204).end();
-
-    if (looksLikeBot(userAgent)) return;
+    if (looksLikeBot(userAgent)) {
+      res.status(204).end();
+      return;
+    }
 
     const body = req.body as { events?: unknown } | IncomingEvent | undefined;
     const incoming: unknown[] = Array.isArray((body as { events?: unknown })?.events)
@@ -62,6 +74,8 @@ analyticsRouter.post(
     const host = req.get('host') ?? null;
     // Resolved once per batch: every event in it came from the same request.
     const geo = geoFromRequest(req);
+
+    const accepted: TrackInput[] = [];
 
     for (const raw of incoming.slice(0, MAX_BATCH)) {
       const event = (raw ?? {}) as IncomingEvent;
@@ -74,7 +88,7 @@ analyticsRouter.post(
       const step = Number(event.step);
       const value = Number(event.value);
 
-      await track({
+      accepted.push({
         name: event.name,
         visitorId,
         sessionId,
@@ -91,5 +105,12 @@ analyticsRouter.post(
         value: Number.isFinite(value) && value >= 0 ? value : null,
       });
     }
+
+    // Validate everything first, write once, then answer. trackAll swallows its
+    // own failures, so a database problem still returns 204 rather than
+    // surfacing an error to a page that is not listening for one.
+    await trackAll(accepted);
+
+    res.status(204).end();
   }),
 );

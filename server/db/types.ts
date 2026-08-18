@@ -120,6 +120,15 @@ export interface Database {
 
   recordEvent(event: Omit<AnalyticsEvent, 'id' | 'createdAt'>): Promise<void>;
   /**
+   * Writes a whole batch in one round trip.
+   *
+   * The browser sends events in batches of up to 25, and inserting them one at
+   * a time would mean 25 sequential round trips to the database while the
+   * request is still open. That is the difference between a request that can
+   * afford to finish its writes before answering and one that cannot.
+   */
+  recordEvents(events: Array<Omit<AnalyticsEvent, 'id' | 'createdAt'>>): Promise<void>;
+  /**
    * Raw events in a window, newest first.
    *
    * Aggregation happens in TypeScript rather than SQL on purpose. At this
