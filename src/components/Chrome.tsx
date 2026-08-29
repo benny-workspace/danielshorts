@@ -64,9 +64,8 @@ export function Proof() {
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <h2 className="display-lg max-w-[16ch]">Built on a real audience.</h2>
-            <p className="max-w-[34ch] text-sm leading-relaxed text-ivory-3">
-              Figures from our K-drama commentary community and the readers who took
-              these guides into their own lives.
+            <p className="max-w-[26ch] text-sm leading-relaxed text-ivory-3">
+              Numbers from our community and the readers who used these guides.
             </p>
           </div>
         </Reveal>
@@ -83,10 +82,9 @@ export function Proof() {
         </div>
 
         <Reveal delay={220}>
-          <p className="mt-8 max-w-[62ch] border-l-2 border-[rgb(var(--accent)/0.5)] pl-5 text-sm leading-relaxed text-ivory-2">
-            Those 1,357 milestones were reported by readers who used the romance
-            readings, manifestation journals, and planning guides to get clear on what
-            they wanted and then go ask for it.
+          <p className="mt-8 max-w-[44ch] border-l-2 border-[rgb(var(--accent)/0.5)] pl-5 text-sm leading-relaxed text-ivory-2">
+            Reported by readers who got clear on what they wanted — and then went and
+            asked for it.
           </p>
         </Reveal>
       </div>
@@ -101,9 +99,8 @@ export function Footer() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="display-md">K-Drama Dreams</p>
-            <p className="mt-2 max-w-[38ch] text-xs leading-relaxed text-ivory-3">
-              A romance-archetype studio for people who take their inner life seriously
-              and their K-dramas even more so.
+            <p className="mt-2 max-w-[30ch] text-xs leading-relaxed text-ivory-3">
+              For people who take their K-dramas seriously.
             </p>
           </div>
 

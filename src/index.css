@@ -377,19 +377,21 @@ body {
   height: 100%;
 }
 
+/*
+ * Holds the answer's emoji. Sized for a glyph rather than a letter, and with
+ * no letter-spacing, which would push a colour emoji off its own centre.
+ */
 .option-key {
   flex-shrink: 0;
-  width: 1.6rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  padding-top: 0.24rem;
-  color: var(--color-ivory-3);
-  transition: color 240ms ease;
+  width: 2rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  text-align: center;
+  transition: transform 240ms var(--ease-out-soft);
 }
 
 .option[data-selected='true'] .option-key {
-  color: rgb(var(--accent));
+  transform: scale(1.15);
 }
 
 /* ------------------------------------------------------------ film frame -- */

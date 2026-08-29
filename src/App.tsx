@@ -9,8 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccountSheet } from './components/Account';
 import { Footer, Header, Proof } from './components/Chrome';
 import { Landing } from './components/Landing';
-import { Offers } from './components/Offers';
-import { OptIn } from './components/OptIn';
+import { Offers, OffersCue } from './components/Offers';
 import { OrderStatusPanel } from './components/OrderStatus';
 import { Quiz } from './components/Quiz';
 import { Result } from './components/Result';
@@ -31,7 +30,17 @@ import {
   type Favorite,
 } from './lib/storage';
 
-type Stage = 'landing' | 'quiz' | 'optin' | 'result';
+/**
+ * There is deliberately no capture step between the quiz and the result.
+ *
+ * An email gate in front of the payoff was the single biggest drop in the
+ * funnel: this traffic arrives from short-form video with no intent to sign up
+ * for anything, and asking before delivering lost people who would otherwise
+ * have seen their archetype and scrolled to the offers. The address is still
+ * collected — at the point of purchase, where it is needed to deliver the
+ * product and where the reader has already decided they want something.
+ */
+type Stage = 'landing' | 'quiz' | 'result';
 
 /** Brand rose, used everywhere outside a personalised result. */
 const BRAND_ACCENT = '226 86 110';
@@ -90,13 +99,13 @@ function AppShell() {
   const [winner, setWinner] = useState<ArchetypeId>(
     () => returnState.current.archetype ?? 'best_friend',
   );
+  // Only ever set by a returning buyer's stored session now; the quiz no
+  // longer asks. Offers falls back to its own field when this is null.
   const [email, setEmail] = useState<string | null>(null);
-  const [name, setName] = useState<string>('');
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [checkout, setCheckout] = useState<CheckoutReturn | null>(
     () => returnState.current.checkout,
   );
@@ -188,61 +197,25 @@ function AppShell() {
   const finishQuiz = useCallback(() => {
     const filled = answers.filter(Boolean) as ArchetypeId[];
     const result = scoreQuiz(filled);
+
     track('quiz_complete', { archetype: result.winner });
     setWinner(result.winner);
     saveSession({ answers: filled, winner: result.winner });
-    setStage('optin');
-    track('optin_view');
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [answers]);
 
-  const revealResult = useCallback(() => {
-    setStage('result');
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    window.setTimeout(() => petals(), 400);
-  }, [petals]);
-
-  const submitOptIn = useCallback(
-    async (submittedEmail: string, submittedName: string) => {
-      setSaving(true);
-      track('optin_submit', { archetype: winner });
-      setEmail(submittedEmail);
-      setName(submittedName);
-      saveSession({ email: submittedEmail });
-
-      const filled = answers.filter(Boolean) as ArchetypeId[];
-
-      try {
-        const saved = await saveQuizResult({
-          answers: filled,
-          winningArchetype: winner,
-          email: submittedEmail,
-          name: submittedName || undefined,
-        });
-        setAttemptId(saved.attemptId);
-        saveSession({ attemptId: saved.attemptId });
-      } catch {
-        // Persistence is a nice-to-have; never block the reveal on it.
-        toast('We could not save your result, but here it is.', 'error');
-      } finally {
-        setSaving(false);
-        revealResult();
-      }
-    },
-    [answers, winner, revealResult, toast],
-  );
-
-  const skipOptIn = useCallback(() => {
-    track('optin_skip', { archetype: winner });
-    const filled = answers.filter(Boolean) as ArchetypeId[];
-    void saveQuizResult({ answers: filled, winningArchetype: winner })
+    // Saved without an address, and without waiting. The attempt is worth
+    // recording either way, but the reveal is the reward and nothing should
+    // stand between finishing the quiz and seeing it — including a round trip.
+    void saveQuizResult({ answers: filled, winningArchetype: result.winner })
       .then((saved) => {
         setAttemptId(saved.attemptId);
         saveSession({ attemptId: saved.attemptId });
       })
       .catch(() => undefined);
-    revealResult();
-  }, [answers, winner, revealResult]);
+
+    setStage('result');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    window.setTimeout(() => petals(), 400);
+  }, [answers, petals]);
 
   const onToggleFavorite = useCallback(() => {
     const next = toggleFavorite(winner);
@@ -293,15 +266,6 @@ function AppShell() {
           />
         ) : null}
 
-        {stage === 'optin' ? (
-          <OptIn
-            archetype={archetype}
-            onSubmit={submitOptIn}
-            onSkip={skipOptIn}
-            submitting={saving}
-          />
-        ) : null}
-
         {stage === 'result' ? (
           <>
             <Result
@@ -310,10 +274,12 @@ function AppShell() {
               favorited={favorites.some((favorite) => favorite.id === winner)}
               onToggleFavorite={onToggleFavorite}
             />
+            {/* Most readers stopped at the result and never scrolled far
+                enough to learn there was anything to buy. */}
+            <OffersCue />
             <Offers
               config={config}
               email={email}
-              name={name || undefined}
               answers={answers.filter(Boolean) as ArchetypeId[]}
               winner={winner}
               attemptId={attemptId}

@@ -186,15 +186,10 @@ export function Quiz({
           </div>
 
           <h2 className="display-lg mt-6 max-w-[20ch] text-balance">{question.question}</h2>
-
-          <p className="mt-6 hidden text-xs text-ivory-3 md:block">
-            Press <span className="text-ivory-2">A–E</span> to choose ·{' '}
-            <span className="text-ivory-2">←/→</span> to move
-          </p>
         </div>
 
         <div className="space-y-2.5">
-          {question.options.map((option, optionIndex) => {
+          {question.options.map((option) => {
             const isSelected = selected === option.archetype;
             return (
               <button
@@ -205,8 +200,13 @@ export function Quiz({
                 className="option"
                 style={{ ['--accent' as string]: ARCHETYPES[option.archetype].accent }}
               >
-                <span className="option-key">{KEYS[optionIndex]}</span>
-                <span className="text-[0.9375rem] leading-relaxed">{option.text}</span>
+                {/* The emoji takes the badge slot the letter used to hold. The
+                    A–E shortcuts still work; they were only ever useful on a
+                    keyboard, and almost nobody arrives here with one. */}
+                <span className="option-key" aria-hidden="true">
+                  {option.emoji}
+                </span>
+                <span className="text-[0.9375rem] leading-snug">{option.text}</span>
               </button>
             );
           })}

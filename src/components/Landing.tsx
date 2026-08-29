@@ -5,21 +5,9 @@ import { image } from '../assets';
 import { Reveal } from './primitives';
 
 const STEPS = [
-  {
-    n: '01',
-    title: 'Seven questions',
-    body: 'Scenes, not adjectives. You pick the moment that actually moves you, and the pattern surfaces on its own.',
-  },
-  {
-    n: '02',
-    title: 'Your archetype',
-    body: 'One of five romance leads, scored from your answers, with the compatibility spread against the other four.',
-  },
-  {
-    n: '03',
-    title: 'The dream scene',
-    body: 'Your result plays as a final-episode confession — subtitles, original score, the whole letterbox.',
-  },
+  { n: '01', title: 'Seven questions', body: 'Pick the scene that moves you.' },
+  { n: '02', title: 'Your archetype', body: 'One of five leads. Plus your match with the rest.' },
+  { n: '03', title: 'Your dream scene', body: 'Played out like a final-episode confession.' },
 ];
 
 export function Landing({ onStart }: { onStart: () => void }) {
@@ -53,17 +41,15 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </Reveal>
 
           <Reveal delay={180}>
-            <p className="prose-body mt-7 max-w-[52ch]">
-              Seven scenes. Five leads. One pattern you have been running since long
-              before you had words for it — your romantic archetype, the story arc that
-              follows from it, and the confession scene your heart keeps rehearsing.
+            <p className="prose-body mt-7 max-w-[40ch]">
+              Seven scenes. Five leads. One pattern you have been running for years.
             </p>
           </Reveal>
 
           <Reveal delay={260}>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <button type="button" onClick={onStart} className="btn btn-primary group">
-                Begin the quiz
+                Start the quiz
                 <ArrowRight
                   size={16}
                   strokeWidth={2}
@@ -71,7 +57,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
                 />
               </button>
               <p className="text-sm text-ivory-3">
-                {QUESTIONS.length} questions · about 2 minutes · free result
+                {QUESTIONS.length} questions · 2 minutes · free
               </p>
             </div>
           </Reveal>
@@ -89,9 +75,9 @@ export function Landing({ onStart }: { onStart: () => void }) {
                   Five leads. One of them is yours.
                 </h2>
               </div>
-              <p className="max-w-[34ch] text-sm leading-relaxed text-ivory-3">
-                Every archetype is a different answer to the same question: what does
-                being loved well actually look like to you?
+              <p className="max-w-[30ch] text-sm leading-relaxed text-ivory-3">
+                Each one is a different answer to: what does being loved well look
+                like to you?
               </p>
             </div>
           </Reveal>
@@ -158,8 +144,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
           <Reveal delay={220}>
             <div className="mt-16 flex flex-col items-start gap-5 border-t border-line pt-10 sm:flex-row sm:items-center sm:justify-between">
-              <p className="display-md max-w-[24ch]">
-                It takes two minutes. It has been true for years.
+              <p className="display-md max-w-[22ch]">
+                Two minutes. True for years.
               </p>
               <button type="button" onClick={onStart} className="btn btn-primary group">
                 Find my archetype
