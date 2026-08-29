@@ -50,16 +50,16 @@ export const PRODUCTS: Record<ProductTier, Product> = {
   bundle: {
     tier: 'bundle',
     name: 'Premium Bundle',
-    headline: '23 pages, your dream scene, all 5 books',
+    headline: '23 pages, your soulmate scene, all 5 books',
     kicker: 'Most popular',
     amount: 300,
     currency: 'usd',
     description:
-      'The blueprint, expanded — plus your dream scene written shot by shot, and a book on every archetype you could meet.',
+      'The blueprint, expanded — plus your dream soulmate scene written shot by shot, and a book on every archetype you could meet.',
     deliverables: [
       'Everything in the $2 Blueprint',
       '23 pages instead of 15',
-      'Your dream scene, written shot by shot',
+      'Meet your dream soulmate, shot by shot',
       'All 5 compatibility books',
     ],
     imageKey: 'product_bundle',

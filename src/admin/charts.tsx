@@ -214,13 +214,13 @@ export function LineChart({
 
       <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5">
         {series.map((s) => (
-          <span key={s.key} className="flex items-center gap-2 text-[0.6875rem] text-ivory-3">
+          <span key={s.key} className="flex items-center gap-2 text-[0.6875rem] text-ink-3">
             <span className="h-[2px] w-4" style={{ background: s.color }} />
             {s.label}
           </span>
         ))}
         {hover !== null ? (
-          <span className="ml-auto text-[0.6875rem] text-ivory-2">
+          <span className="ml-auto text-[0.6875rem] text-ink-2">
             {shortDay(data[hover].day)} ·{' '}
             {series
               .map((s) => {
@@ -306,7 +306,7 @@ export function Delta({ current, previous }: { current: number; previous: number
   const change = ((current - previous) / previous) * 100;
   const flat = Math.abs(change) < 1;
   const color = flat
-    ? 'var(--color-ivory-3)'
+    ? 'var(--color-ink-3)'
     : change > 0
       ? 'rgb(151 208 168)'
       : 'var(--color-rose-2)';
@@ -399,9 +399,9 @@ export function Donut({
         {arcs.map((arc) => (
           <li key={arc.label} className="flex items-center gap-2.5 text-[0.8125rem]">
             <span className="h-2.5 w-2.5 shrink-0" style={{ background: arc.color }} />
-            <span className="min-w-0 flex-1 truncate text-ivory-2">{arc.label}</span>
-            <span className="numeral shrink-0 text-ivory">{arc.value}</span>
-            <span className="shrink-0 text-[0.6875rem] text-ivory-3">{arc.share.toFixed(0)}%</span>
+            <span className="min-w-0 flex-1 truncate text-ink-2">{arc.label}</span>
+            <span className="numeral shrink-0 text-ink">{arc.value}</span>
+            <span className="shrink-0 text-[0.6875rem] text-ink-3">{arc.share.toFixed(0)}%</span>
           </li>
         ))}
       </ul>
@@ -449,19 +449,19 @@ export function FunnelBars({
             className="border-b border-line-soft py-3.5 first:pt-0 last:border-0 last:pb-0"
           >
             <div className="flex items-baseline justify-between gap-4 pb-1.5">
-              <span className="text-[0.8125rem] text-ivory-2">
-                <span className="numeral mr-2 text-ivory-3">{String(index + 1).padStart(2, '0')}</span>
+              <span className="text-[0.8125rem] text-ink-2">
+                <span className="numeral mr-2 text-ink-3">{String(index + 1).padStart(2, '0')}</span>
                 {step.label}
               </span>
               <span className="flex shrink-0 items-baseline gap-3">
-                <span className="numeral text-base text-ivory">{step.visitors}</span>
-                <span className="w-14 text-right text-[0.6875rem] text-ivory-3">
+                <span className="numeral text-base text-ink">{step.visitors}</span>
+                <span className="w-14 text-right text-[0.6875rem] text-ink-3">
                   {formatPct(step.rateFromTop)}
                 </span>
               </span>
             </div>
 
-            <div className="h-7 w-full bg-ink-800">
+            <div className="h-7 w-full bg-paper-3">
               <div
                 className="h-full transition-[width] duration-700"
                 style={{
@@ -477,11 +477,11 @@ export function FunnelBars({
             </div>
 
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-1.5 text-[0.6875rem] leading-relaxed">
-              <span className="max-w-[62ch] text-ivory-3">{step.hint}</span>
+              <span className="max-w-[62ch] text-ink-3">{step.hint}</span>
               {index > 0 ? (
                 <span
                   className="shrink-0"
-                  style={{ color: leak ? 'var(--color-gold)' : 'var(--color-ivory-3)' }}
+                  style={{ color: leak ? 'var(--color-gold)' : 'var(--color-ink-3)' }}
                 >
                   {formatPct(step.rateFromPrev)} of previous
                   {step.lost > 0 ? ` · ${step.lost} lost` : ''}
@@ -512,13 +512,13 @@ export function BarList({
       {rows.map((row) => (
         <li key={row.label}>
           <div className="flex items-baseline justify-between gap-3 pb-1">
-            <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-ivory-2">{row.label}</span>
-            {row.sub ? <span className="shrink-0 text-[0.6875rem] text-ivory-3">{row.sub}</span> : null}
-            <span className="numeral shrink-0 text-sm text-ivory">
+            <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-ink-2">{row.label}</span>
+            {row.sub ? <span className="shrink-0 text-[0.6875rem] text-ink-3">{row.sub}</span> : null}
+            <span className="numeral shrink-0 text-sm text-ink">
               {format ? format(row.value) : row.value}
             </span>
           </div>
-          <div className="h-1.5 w-full bg-ink-800">
+          <div className="h-1.5 w-full bg-paper-3">
             <div
               className="h-full"
               style={{
@@ -536,7 +536,7 @@ export function BarList({
 function Empty({ height }: { height: number }) {
   return (
     <div
-      className="flex items-center justify-center border border-dashed border-line-soft text-[0.6875rem] text-ivory-3"
+      className="flex items-center justify-center border border-dashed border-line-soft text-[0.6875rem] text-ink-3"
       style={{ height }}
     >
       Nothing recorded in this window yet.

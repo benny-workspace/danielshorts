@@ -110,12 +110,12 @@ function Gate({
           <p className="label label-accent">Private</p>
         </div>
         <h1 className="display-md mt-3">Funnel dashboard</h1>
-        <p className="mt-2 text-[0.8125rem] leading-relaxed text-ivory-3">
+        <p className="mt-2 text-[0.8125rem] leading-relaxed text-ink-3">
           Everything behind this page is yours only.
         </p>
 
         {!configured ? (
-          <p className="mt-5 border border-gold/25 bg-gold/5 px-3.5 py-3 text-xs leading-relaxed text-ivory-2">
+          <p className="mt-5 border border-gold/25 bg-gold/5 px-3.5 py-3 text-xs leading-relaxed text-ink-2">
             <span className="font-semibold text-gold">Not set up yet.</span> {reason} Add it in
             Vercel under Settings → Environment Variables, then redeploy.
           </p>
@@ -211,9 +211,9 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   };
 
   return (
-    <div className="min-h-screen bg-ink-950 pb-24">
+    <div className="min-h-screen bg-paper pb-24">
       {/* ----------------------------------------------------------- head */}
-      <header className="sticky top-0 z-20 border-b border-line-soft bg-ink-950/90 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-line-soft bg-paper/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4 sm:px-8">
           <div className="mr-auto">
             <p className="label label-accent">K-Drama Dreams</p>
@@ -226,9 +226,9 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                 key={range.days}
                 type="button"
                 onClick={() => setDays(range.days)}
-                className="bg-ink-900 px-3.5 py-2 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors"
+                className="bg-paper-2 px-3.5 py-2 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors"
                 style={{
-                  color: days === range.days ? 'rgb(var(--accent))' : 'var(--color-ivory-3)',
+                  color: days === range.days ? 'rgb(var(--accent))' : 'var(--color-ink-3)',
                   background: days === range.days ? 'rgb(var(--accent) / 0.09)' : undefined,
                 }}
               >
@@ -257,7 +257,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       <main className="mx-auto max-w-7xl space-y-12 px-5 pt-10 sm:px-8">
         {!data.storage.durable ? <MemoryWarning /> : null}
         {error ? (
-          <p className="border border-rose-deep/40 bg-rose-deep/10 px-4 py-3 text-xs text-ivory-2">
+          <p className="border border-rose-deep/40 bg-rose-deep/10 px-4 py-3 text-xs text-ink-2">
             Last refresh failed: {error}
           </p>
         ) : null}
@@ -310,7 +310,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
               const carried = index > 0 ? rate(column.visitors, previous) : 100;
 
               return (
-                <div key={column.id} className="relative flex flex-col bg-ink-900 p-4">
+                <div key={column.id} className="relative flex flex-col bg-paper-2 p-4">
                   {/*
                     The share of the previous column that made it here, printed
                     on the seam between the two. It turns five separate boxes
@@ -319,11 +319,11 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                   */}
                   {index > 0 ? (
                     <span
-                      className="absolute -left-px top-0 z-10 hidden -translate-x-1/2 border border-line-soft bg-ink-950 px-1.5 py-0.5 text-[0.625rem] tabular-nums xl:block"
+                      className="absolute -left-px top-0 z-10 hidden -translate-x-1/2 border border-line-soft bg-paper px-1.5 py-0.5 text-[0.625rem] tabular-nums xl:block"
                       style={{
                         color:
                           previous === 0
-                            ? 'var(--color-ivory-3)'
+                            ? 'var(--color-ink-3)'
                             : carried >= 60
                               ? 'rgb(151 208 168)'
                               : carried >= 30
@@ -338,18 +338,18 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
 
                   <div className="flex items-baseline justify-between gap-2 border-b border-line-soft pb-3">
                     <p className="label">{column.title}</p>
-                    <span className="numeral text-xl text-ivory">{column.visitors}</span>
+                    <span className="numeral text-xl text-ink">{column.visitors}</span>
                   </div>
 
                   <div className="mt-3 space-y-2.5">
                     {column.cards.map((card) => (
                       <article
                         key={card.label}
-                        className="border-l-2 bg-ink-800 p-3 transition-colors hover:bg-ink-700"
+                        className="border-l-2 bg-paper-3 p-3 transition-colors hover:bg-paper-4"
                         style={{ borderColor: toneBorder(card.tone) }}
                       >
                         <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-[0.625rem] uppercase tracking-[0.12em] text-ivory-3">
+                          <p className="text-[0.625rem] uppercase tracking-[0.12em] text-ink-3">
                             {card.label}
                           </p>
                           <span
@@ -359,7 +359,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                             {card.value}
                           </span>
                         </div>
-                        <p className="mt-2 text-[0.6875rem] leading-relaxed text-ivory-3">
+                        <p className="mt-2 text-[0.6875rem] leading-relaxed text-ink-3">
                           {card.detail}
                         </p>
                       </article>
@@ -441,7 +441,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                       (heading) => (
                         <th
                           key={heading}
-                          className="whitespace-nowrap pb-3 pr-3 text-[0.625rem] uppercase tracking-[0.14em] text-ivory-3 last:pr-0"
+                          className="whitespace-nowrap pb-3 pr-3 text-[0.625rem] uppercase tracking-[0.14em] text-ink-3 last:pr-0"
                         >
                           {heading}
                         </th>
@@ -453,15 +453,15 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                   {data.tiers.map((tier) => (
                     <tr key={tier.tier} className="border-b border-line-soft last:border-0">
                       <td className="whitespace-nowrap py-3.5 pr-3">
-                        <span className="text-[0.8125rem] text-ivory">{tier.name}</span>
-                        <span className="numeral ml-2 text-ivory-3">
+                        <span className="text-[0.8125rem] text-ink">{tier.name}</span>
+                        <span className="numeral ml-2 text-ink-3">
                           ${(tier.amount / 100).toFixed(0)}
                         </span>
                       </td>
-                      <td className="numeral py-3.5 pr-3 text-ivory-2">{tier.clicks}</td>
-                      <td className="numeral py-3.5 pr-3 text-ivory-2">{tier.reachedStripe}</td>
-                      <td className="numeral py-3.5 pr-3 text-ivory">{tier.purchases}</td>
-                      <td className="numeral whitespace-nowrap py-3.5 pr-3 text-ivory">
+                      <td className="numeral py-3.5 pr-3 text-ink-2">{tier.clicks}</td>
+                      <td className="numeral py-3.5 pr-3 text-ink-2">{tier.reachedStripe}</td>
+                      <td className="numeral py-3.5 pr-3 text-ink">{tier.purchases}</td>
+                      <td className="numeral whitespace-nowrap py-3.5 pr-3 text-ink">
                         {formatMoney(tier.revenueCents)}
                       </td>
                       <td className="numeral py-3.5" style={{ color: 'rgb(var(--accent))' }}>
@@ -610,7 +610,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                     {['Order', 'Product', 'Status', 'Amount', 'When'].map((heading) => (
                       <th
                         key={heading}
-                        className="whitespace-nowrap pb-3 pr-6 text-[0.625rem] uppercase tracking-[0.14em] text-ivory-3 last:pr-0"
+                        className="whitespace-nowrap pb-3 pr-6 text-[0.625rem] uppercase tracking-[0.14em] text-ink-3 last:pr-0"
                       >
                         {heading}
                       </th>
@@ -620,10 +620,10 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                 <tbody>
                   {data.orders.recent.map((order) => (
                     <tr key={order.id} className="border-b border-line-soft last:border-0">
-                      <td className="numeral py-3 pr-4 text-ivory-3">
+                      <td className="numeral py-3 pr-4 text-ink-3">
                         {order.id.slice(0, 8).toUpperCase()}
                       </td>
-                      <td className="py-3 pr-4 text-[0.8125rem] text-ivory-2">{order.tier}</td>
+                      <td className="py-3 pr-4 text-[0.8125rem] text-ink-2">{order.tier}</td>
                       <td className="py-3 pr-4">
                         <span
                           className="text-[0.6875rem] uppercase tracking-[0.12em]"
@@ -632,8 +632,8 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                           {order.status}
                         </span>
                       </td>
-                      <td className="numeral py-3 pr-4 text-ivory">{formatMoney(order.amount)}</td>
-                      <td className="py-3 text-[0.75rem] text-ivory-3">
+                      <td className="numeral py-3 pr-4 text-ink">{formatMoney(order.amount)}</td>
+                      <td className="py-3 text-[0.75rem] text-ink-3">
                         {new Date(order.createdAt).toLocaleString()}
                       </td>
                     </tr>
@@ -641,14 +641,14 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                 </tbody>
               </table>
             ) : (
-              <p className="py-6 text-center text-[0.8125rem] text-ivory-3">
+              <p className="py-6 text-center text-[0.8125rem] text-ink-3">
                 No orders in this window yet.
               </p>
             )}
           </div>
         </Section>
 
-        <p className="pt-4 text-center text-[0.6875rem] text-ivory-3">
+        <p className="pt-4 text-center text-[0.6875rem] text-ink-3">
           {data.storage.eventsStored.toLocaleString()} events in this window · store:{' '}
           {data.storage.driver} · refreshed{' '}
           {new Date(data.generatedAt).toLocaleTimeString()}
@@ -675,14 +675,14 @@ function MemoryWarning() {
         <p className="text-[0.8125rem] font-semibold text-gold">
           These numbers are not being kept.
         </p>
-        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ivory-2">
+        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-2">
           No <code className="text-gold">DATABASE_URL</code> is set, so events are held in the
           memory of one serverless instance and thrown away whenever it sleeps — which is every
           few minutes on a quiet site. Sales and revenue below are still accurate because they
           are read from Stripe, but visitors, quiz steps and clicks will read far lower than
           they really are. Add a Postgres connection string in Vercel and this banner goes away.
         </p>
-        <p className="mt-2 flex items-center gap-2 text-[0.6875rem] text-ivory-3">
+        <p className="mt-2 flex items-center gap-2 text-[0.6875rem] text-ink-3">
           <Database size={12} strokeWidth={1.6} />
           Supabase → Project → Settings → Database → Connection string (session pooler)
         </p>
@@ -698,7 +698,7 @@ function MemoryWarning() {
  */
 function GeoEmpty() {
   return (
-    <div className="flex h-[120px] items-center justify-center border border-dashed border-line-soft px-4 text-center text-[0.6875rem] leading-relaxed text-ivory-3">
+    <div className="flex h-[120px] items-center justify-center border border-dashed border-line-soft px-4 text-center text-[0.6875rem] leading-relaxed text-ink-3">
       No location data yet. Locations are filled in by Vercel's edge on live
       traffic, so this stays empty when running locally.
     </div>
@@ -718,7 +718,7 @@ function Section({
     <section>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
         <h2 className="display-md">{title}</h2>
-        <p className="max-w-[52ch] text-[0.8125rem] leading-relaxed text-ivory-3">{blurb}</p>
+        <p className="max-w-[52ch] text-[0.8125rem] leading-relaxed text-ink-3">{blurb}</p>
       </div>
       {children}
     </section>
@@ -748,10 +748,10 @@ function Tile({
     ? 'var(--color-gold)'
     : accent
       ? 'rgb(var(--accent))'
-      : 'var(--color-ivory)';
+      : 'var(--color-ink)';
 
   return (
-    <div className="flex flex-col bg-ink-900 p-5">
+    <div className="flex flex-col bg-paper-2 p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="label">{label}</p>
         {split ? <Delta current={split.current} previous={split.previous} /> : null}
@@ -760,7 +760,7 @@ function Tile({
       <p className="numeral mt-3 text-4xl leading-none" style={{ color: tone }}>
         {value}
       </p>
-      <p className="mt-2 text-[0.6875rem] leading-relaxed text-ivory-3">{sub}</p>
+      <p className="mt-2 text-[0.6875rem] leading-relaxed text-ink-3">{sub}</p>
 
       {series && series.some((v) => v > 0) ? (
         <div className="mt-4">
@@ -777,7 +777,7 @@ function Tile({
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink-950 px-5">{children}</div>
+    <div className="flex min-h-screen items-center justify-center bg-paper px-5">{children}</div>
   );
 }
 
@@ -829,12 +829,12 @@ function toneBorder(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
 }
 
 function toneText(tone: 'good' | 'warn' | 'bad' | 'plain'): string {
-  return tone === 'plain' ? 'var(--color-ivory)' : toneBorder(tone);
+  return tone === 'plain' ? 'var(--color-ink)' : toneBorder(tone);
 }
 
 function statusColor(status: string): string {
   if (status === 'fulfilled') return 'rgb(151 208 168)';
   if (status === 'paid') return 'rgb(var(--accent))';
   if (status === 'failed') return 'var(--color-rose-2)';
-  return 'var(--color-ivory-3)';
+  return 'var(--color-ink-3)';
 }

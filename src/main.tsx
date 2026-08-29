@@ -15,7 +15,7 @@ const isAdmin = window.location.pathname.replace(/\/+$/, '') === '/admin';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {isAdmin ? (
-      <Suspense fallback={<div className="min-h-screen bg-ink-950" />}>
+      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
         <AdminApp />
       </Suspense>
     ) : (

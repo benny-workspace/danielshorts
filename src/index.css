@@ -2,35 +2,42 @@
 
 /* ==========================================================================
    K-Drama Dreams — design tokens
-   A dark, warm, cinematic system: film-still imagery, one high-contrast serif
-   for display, a tight grotesque for UI, and a single accent that re-tints
-   itself per archetype via --accent.
+   Light, soft and minimal: white paper, generous corner radii, one rose accent
+   that re-tints itself per archetype via --accent, a high-contrast serif for
+   display and a tight grotesque for UI.
+
+   The scale is named for what it is. `paper` runs from the page background
+   inward through raised and inset surfaces; `ink` runs from primary text out to
+   muted. They were called ink-950…500 and ivory…ivory-3 while the theme was
+   dark, which inverted the moment the background became white.
    ========================================================================== */
 
 @theme {
-  --color-ink-950: #06050a;
-  --color-ink-900: #0a0810;
-  --color-ink-800: #100d18;
-  --color-ink-700: #16121f;
-  --color-ink-600: #1e1829;
-  --color-ink-500: #2a2235;
+  --color-paper: #ffffff;
+  --color-paper-2: #fdfafb;
+  --color-paper-3: #f7f2f4;
+  --color-paper-4: #efe7ea;
 
-  --color-line: #2c2438;
-  --color-line-soft: #201a2b;
+  --color-line: #e7dde1;
+  --color-line-soft: #f1eaed;
 
-  --color-ivory: #f3ede4;
-  --color-ivory-2: #c5bcb3;
-  --color-ivory-3: #8b8394;
+  --color-ink: #17121a;
+  --color-ink-2: #554c5b;
+  --color-ink-3: #8d8494;
 
   --color-rose: #e2566e;
-  --color-rose-2: #ff8fa0;
+  /* Darkened from the dark theme's #ff8fa0: that was legible on near-black and
+     is far too pale to read as an error against white. */
+  --color-rose-2: #c8324b;
   --color-rose-deep: #a8324a;
-  --color-gold: #d4af6a;
+  /* Same reason — the old #d4af6a disappeared into a white page. */
+  --color-gold: #93701f;
 
   --font-display: 'Instrument Serif', 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  --radius-card: 4px;
+  --radius-card: 16px;
+  --radius-control: 12px;
 
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -38,7 +45,7 @@
 :root {
   /* Overridden per archetype so accents follow the reader's result. */
   --accent: 226 86 110;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* ---------------------------------------------------------------- base ---- */
@@ -53,8 +60,8 @@ html {
 }
 
 body {
-  background-color: var(--color-ink-950);
-  color: var(--color-ivory);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
   -webkit-font-smoothing: antialiased;
@@ -64,26 +71,26 @@ body {
 
 ::selection {
   background: rgb(var(--accent) / 0.3);
-  color: var(--color-ivory);
+  color: var(--color-ink);
 }
 
 :focus-visible {
   outline: 2px solid rgb(var(--accent));
   outline-offset: 3px;
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 /* Restrained, on-theme scrollbar rather than the default light one. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-ink-500) transparent;
+  scrollbar-color: var(--color-line) transparent;
 }
 *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--color-ink-500);
+  background: var(--color-line);
   border-radius: 99px;
 }
 
@@ -126,7 +133,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-ivory-3);
+  color: var(--color-ink-3);
 }
 
 .label-accent {
@@ -136,7 +143,7 @@ body {
 .prose-body {
   font-size: 1rem;
   line-height: 1.72;
-  color: var(--color-ivory-2);
+  color: var(--color-ink-2);
 }
 
 @media (min-width: 768px) {
@@ -159,10 +166,11 @@ body {
   inset: -50%;
   z-index: 60;
   pointer-events: none;
-  /* Kept low: `overlay` lifts mid-tones, and anything heavier visibly washes
-     out the accent-filled buttons. */
-  opacity: 0.12;
-  mix-blend-mode: overlay;
+  /* Much lighter than the dark theme's 0.12/overlay, and multiplying rather
+     than overlaying: on white, `overlay` greys the whole page into something
+     dirty, where a faint multiply reads as paper texture. */
+  opacity: 0.035;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
   will-change: transform;
   animation: grain-drift 700ms steps(2, end) infinite;
@@ -181,18 +189,23 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60rem 40rem at 12% -10%, rgb(var(--accent) / 0.13), transparent 62%),
-    radial-gradient(45rem 34rem at 92% 8%, rgba(212, 175, 106, 0.075), transparent 60%),
-    radial-gradient(50rem 40rem at 50% 108%, rgb(var(--accent) / 0.09), transparent 65%);
+    radial-gradient(60rem 40rem at 12% -10%, rgb(var(--accent) / 0.07), transparent 62%),
+    radial-gradient(50rem 40rem at 50% 108%, rgb(var(--accent) / 0.05), transparent 65%);
   transition: background 900ms ease;
 }
 
+/*
+ * Fades the hero still into the page rather than darkening its edges. The dark
+ * theme sank the image into near-black here; against white the same gradient
+ * would ring the photo in a grey halo, and the headline over it is now dark
+ * text that needs a light ground to sit on.
+ */
 .vignette::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 40%, transparent 42%, rgba(6, 5, 10, 0.72) 100%);
+  background: radial-gradient(125% 105% at 50% 32%, transparent 38%, var(--color-paper) 92%);
 }
 
 /* ---------------------------------------------------------------- rules --- */
@@ -216,20 +229,33 @@ body {
 
 /* --------------------------------------------------------------- surface -- */
 
+/*
+ * Depth is carried by a soft shadow now instead of a lighter fill. On a dark
+ * ground a panel separates by getting brighter; on white there is nowhere
+ * brighter to go, so it has to lift off the page instead.
+ */
 .panel {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 40%),
-    var(--color-ink-800);
+  background: var(--color-paper);
   border: 1px solid var(--color-line-soft);
   border-radius: var(--radius-card);
+  box-shadow: 0 1px 2px rgba(23, 18, 26, 0.04);
 }
 
 .panel-raised {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 45%),
-    var(--color-ink-700);
+  background: var(--color-paper);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
+  box-shadow:
+    0 4px 14px -6px rgba(23, 18, 26, 0.1),
+    0 1px 3px rgba(23, 18, 26, 0.05);
+}
+
+/* A plain rounded surface, for grids that used hairline seams to divide. */
+.card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
 /* ---------------------------------------------------------------- button -- */
@@ -243,7 +269,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0.95rem 1.6rem;
-  border-radius: 2px;
+  border-radius: 999px;
   cursor: pointer;
   transition:
     background-color 220ms var(--ease-out-soft),
@@ -266,20 +292,18 @@ body {
 
 .btn-primary {
   background: rgb(var(--accent));
-  color: #120a0e;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgb(var(--accent) / 0.35);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: rgb(var(--accent) / 0.86);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.22) inset,
-    0 8px 30px -8px rgb(var(--accent) / 0.55);
+  background: rgb(var(--accent) / 0.9);
+  box-shadow: 0 8px 22px -8px rgb(var(--accent) / 0.55);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-ivory);
+  color: var(--color-ink);
   border-color: var(--color-line);
 }
 
@@ -290,35 +314,36 @@ body {
 
 .btn-quiet {
   background: transparent;
-  color: var(--color-ivory-3);
+  color: var(--color-ink-3);
   padding: 0.5rem 0.25rem;
 }
 
 .btn-quiet:hover:not(:disabled) {
-  color: var(--color-ivory);
+  color: var(--color-ink);
 }
 
 /* ---------------------------------------------------------------- inputs -- */
 
 .field {
   width: 100%;
-  background: var(--color-ink-900);
+  background: var(--color-paper);
   border: 1px solid var(--color-line);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   padding: 0.95rem 1rem;
   font-size: 0.95rem;
-  color: var(--color-ivory);
+  color: var(--color-ink);
   transition: border-color 200ms ease, background-color 200ms ease;
 }
 
 .field::placeholder {
-  color: #5d5666;
+  color: var(--color-ink-3);
 }
 
 .field:focus {
   outline: none;
   border-color: rgb(var(--accent) / 0.7);
-  background: var(--color-ink-800);
+  background: var(--color-paper);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12);
 }
 
 /* ------------------------------------------------------------ quiz option - */
@@ -331,11 +356,11 @@ body {
   gap: 1rem;
   padding: 1.15rem 1.25rem 1.15rem 1.1rem;
   text-align: left;
-  background: transparent;
-  border: 1px solid var(--color-line-soft);
-  border-radius: 2px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
   cursor: pointer;
-  color: var(--color-ivory-2);
+  color: var(--color-ink-2);
   transition:
     border-color 240ms var(--ease-out-soft),
     background-color 240ms var(--ease-out-soft),
@@ -347,9 +372,10 @@ body {
 .option::before {
   content: '';
   position: absolute;
-  left: -1px;
+  left: 0;
   top: 50%;
-  width: 2px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   height: 0;
   background: rgb(var(--accent));
   transform: translateY(-50%);
@@ -358,9 +384,9 @@ body {
 
 @media (hover: hover) {
   .option:hover {
-    border-color: var(--color-line);
-    background: rgba(255, 255, 255, 0.022);
-    color: var(--color-ivory);
+    border-color: rgb(var(--accent) / 0.4);
+    background: var(--color-paper-3);
+    color: var(--color-ink);
   }
   .option:hover::before {
     height: 42%;
@@ -370,7 +396,7 @@ body {
 .option[data-selected='true'] {
   border-color: rgb(var(--accent) / 0.5);
   background: rgb(var(--accent) / 0.075);
-  color: var(--color-ivory);
+  color: var(--color-ink);
 }
 
 .option[data-selected='true']::before {
@@ -401,6 +427,7 @@ body {
   overflow: hidden;
   background: #000;
   border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
 }
 
 /* Slow Ken-Burns push. Paused when the scene is idle. */
@@ -421,7 +448,7 @@ body {
   background: rgba(6, 5, 10, 0.74);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 2px;
+  border-radius: 10px;
   font-size: 0.875rem;
   line-height: 1.55;
   color: #f6f2ec;
@@ -446,15 +473,17 @@ body {
 
 .meter-track {
   position: relative;
-  height: 2px;
-  background: var(--color-ink-500);
+  height: 4px;
+  background: var(--color-paper-4);
+  border-radius: 99px;
   overflow: hidden;
 }
 
 .meter-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  background: linear-gradient(90deg, rgb(var(--accent) / 0.55), rgb(var(--accent)));
+  border-radius: 99px;
+  background: linear-gradient(90deg, rgb(var(--accent) / 0.6), rgb(var(--accent)));
   transition: width 900ms var(--ease-out-soft);
 }
 

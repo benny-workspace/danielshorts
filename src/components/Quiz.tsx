@@ -1,6 +1,6 @@
 import { ARCHETYPES, type ArchetypeId } from '@shared/archetypes';
 import { QUESTIONS } from '@shared/questions';
-import { ArrowLeft, ArrowRight, ListChecks } from 'lucide-react';
+import { ArrowLeft, ListChecks } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Sheet } from './primitives';
 
@@ -15,7 +15,15 @@ export function Quiz({
 }: {
   answers: Array<ArchetypeId | null>;
   onAnswer: (index: number, archetype: ArchetypeId) => void;
-  onComplete: () => void;
+  /**
+   * Handed the finished set rather than reading it from the parent's state.
+   *
+   * The seventh answer now finishes the quiz by itself, and the parent's
+   * `answers` has not necessarily been committed by the time this fires — so
+   * passing them explicitly is what stops the last choice being dropped from
+   * the score.
+   */
+  onComplete: (finalAnswers: ArchetypeId[]) => void;
   onExit: () => void;
 }) {
   const [index, setIndex] = useState(0);
@@ -34,15 +42,6 @@ export function Quiz({
     setIndex(next);
   }, [index]);
 
-  const goNext = useCallback(() => {
-    if (!answers[index]) return;
-    if (isLast) {
-      onComplete();
-      return;
-    }
-    goTo(index + 1);
-  }, [answers, index, isLast, onComplete, goTo]);
-
   const goBack = useCallback(() => {
     if (index === 0) {
       onExit();
@@ -54,15 +53,25 @@ export function Quiz({
   const select = useCallback(
     (archetype: ArchetypeId) => {
       onAnswer(index, archetype);
-      // Give the selection state a beat to read before advancing.
+
+      // Give the selection state a beat to read, then move. The last answer
+      // ends the quiz rather than revealing a button to press: every extra tap
+      // between finishing and the reward costs readers who were already done.
       window.setTimeout(() => {
-        if (index < QUESTIONS.length - 1) {
+        if (!isLast) {
           setDirection(1);
           setIndex((current) => (current === index ? current + 1 : current));
+          return;
         }
+
+        // Built here from the props plus the choice just made, so it is
+        // complete regardless of whether the parent has re-rendered yet.
+        const final = [...answers];
+        final[index] = archetype;
+        onComplete(final.filter(Boolean) as ArchetypeId[]);
       }, 420);
     },
-    [index, onAnswer],
+    [answers, index, isLast, onAnswer, onComplete],
   );
 
   // Keyboard: A–E (or 1–5) to answer, arrows to navigate.
@@ -81,10 +90,6 @@ export function Quiz({
         select(question.options[optionIndex].archetype);
         return;
       }
-      if (event.key === 'ArrowRight' || event.key === 'Enter') {
-        event.preventDefault();
-        goNext();
-      }
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         goBack();
@@ -93,7 +98,7 @@ export function Quiz({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [question, select, goNext, goBack, historyOpen]);
+  }, [question, select, goBack, historyOpen]);
 
   const onTouchStart = (event: React.TouchEvent) => {
     const touch = event.changedTouches[0];
@@ -111,8 +116,7 @@ export function Quiz({
 
     // Ignore mostly-vertical gestures so page scrolling still feels natural.
     if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.6) return;
-    if (dx < 0) goNext();
-    else goBack();
+    if (dx > 0) goBack();
   };
 
   return (
@@ -146,7 +150,7 @@ export function Quiz({
                       ? 'rgb(var(--accent))'
                       : done
                         ? 'rgb(var(--accent) / 0.4)'
-                        : 'var(--color-ink-500)',
+                        : 'var(--color-line)',
                     transform: current ? 'scaleY(2)' : undefined,
                   }}
                 />
@@ -158,7 +162,7 @@ export function Quiz({
         <button
           type="button"
           onClick={() => setHistoryOpen(true)}
-          className="flex shrink-0 items-center gap-2 text-ivory-3 transition-colors hover:text-ivory"
+          className="flex shrink-0 items-center gap-2 text-ink-3 transition-colors hover:text-ink"
           aria-label="Review your choices"
         >
           <ListChecks size={15} strokeWidth={1.5} />
@@ -179,7 +183,7 @@ export function Quiz({
       >
         <div className="md:sticky md:top-28">
           <div className="flex items-baseline gap-4">
-            <span className="numeral text-5xl text-ivory/20 md:text-6xl">
+            <span className="numeral text-5xl text-ink/20 md:text-6xl">
               {String(index + 1).padStart(2, '0')}
             </span>
             <span className="label">{question.chapter}</span>
@@ -220,19 +224,7 @@ export function Quiz({
           {index === 0 ? 'Back to start' : 'Previous'}
         </button>
 
-        <span className="label hidden sm:block">
-          {progress}% complete
-        </span>
-
-        <button
-          type="button"
-          onClick={goNext}
-          disabled={!selected}
-          className="btn btn-ghost"
-        >
-          {isLast ? 'See my result' : 'Continue'}
-          <ArrowRight size={15} strokeWidth={1.5} />
-        </button>
+        <span className="label">{progress}% complete</span>
       </div>
 
       <Sheet
@@ -259,13 +251,13 @@ export function Quiz({
                   className="w-full text-left disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <div className="flex items-baseline gap-3">
-                    <span className="numeral text-sm text-ivory/25">
+                    <span className="numeral text-sm text-ink/25">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="label !tracking-[0.14em]">{item.chapter}</span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-ivory-2">
-                    {chosen ? chosen.text : <span className="italic text-ivory-3">Not answered yet</span>}
+                  <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                    {chosen ? chosen.text : <span className="italic text-ink-3">Not answered yet</span>}
                   </p>
                 </button>
               </li>

@@ -58,7 +58,7 @@ export function OrderStatusPanel({
       <Shell tone="neutral" onDismiss={onDismiss}>
         <p className="label">Checkout cancelled</p>
         <h2 className="display-md mt-3">No payment was taken.</h2>
-        <p className="mt-3 text-sm leading-relaxed text-ivory-2">
+        <p className="mt-3 text-sm leading-relaxed text-ink-2">
           Your result is still here whenever you want it. Nothing was charged.
         </p>
       </Shell>
@@ -77,7 +77,7 @@ export function OrderStatusPanel({
             <p className="label label-accent">Payment received</p>
           </div>
           <h2 className="display-md mt-3">Your blueprint is ready.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-ivory-2">
+          <p className="mt-3 text-sm leading-relaxed text-ink-2">
             A copy is on its way to your inbox with a receipt. You can also grab it here —
             the link is signed and expires, so save the file once it opens.
           </p>
@@ -106,12 +106,12 @@ export function OrderStatusPanel({
             ) : null}
           </div>
           {order.templateUrl ? (
-            <p className="mt-4 text-xs leading-relaxed text-ivory-3">
-              In Notion, hit <span className="text-ivory-2">Duplicate</span> in the top-right
+            <p className="mt-4 text-xs leading-relaxed text-ink-3">
+              In Notion, hit <span className="text-ink-2">Duplicate</span> in the top-right
               to save your own copy of the planner.
             </p>
           ) : null}
-          <p className="mt-4 text-[0.6875rem] text-ivory-3">
+          <p className="mt-4 text-[0.6875rem] text-ink-3">
             Order {order.id.slice(0, 8).toUpperCase()} · {money(order.amountPaid)}
           </p>
         </>
@@ -124,7 +124,7 @@ export function OrderStatusPanel({
             </p>
           </div>
           <h2 className="display-md mt-3">Your payment went through.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-ivory-2">
+          <p className="mt-3 text-sm leading-relaxed text-ink-2">
             The file did not generate. Reply to your Stripe receipt and we will send it
             manually — you will not be charged twice.
           </p>
@@ -136,12 +136,12 @@ export function OrderStatusPanel({
             <p className="label label-accent">Writing your blueprint</p>
           </div>
           <h2 className="display-md mt-3">Thank you — this takes a moment.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-ivory-2">
+          <p className="mt-3 text-sm leading-relaxed text-ink-2">
             We are generating your 15 pages from your answers and emailing them to you.
             You can close this page; the email will still arrive.
           </p>
           {elapsed > 30 ? (
-            <p className="mt-4 text-xs text-ivory-3">
+            <p className="mt-4 text-xs text-ink-3">
               Still working ({elapsed}s). If nothing arrives in a few minutes, check your
               spam folder or reply to your Stripe receipt.
             </p>
@@ -175,7 +175,7 @@ function Shell({
         <button
           type="button"
           onClick={onDismiss}
-          className="absolute right-4 top-4 text-xs text-ivory-3 transition-colors hover:text-ivory"
+          className="absolute right-4 top-4 text-xs text-ink-3 transition-colors hover:text-ink"
         >
           Dismiss
         </button>

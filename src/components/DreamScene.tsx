@@ -108,23 +108,23 @@ export function DreamScene({
       <img
         key={`${archetype.id}-${beat}`}
         src={image(archetype.dreamMovie.sceneKey)}
-        alt={`${archetype.title} — dream outcome scene`}
+        alt={`${archetype.title} — your dream soulmate scene`}
         className={`h-full w-full object-cover ${started && !reducedMotion ? 'ken-burns' : 'scale-105'}`}
         style={{ ['--kb-origin' as string]: ORIGINS[beat % ORIGINS.length] }}
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/25 to-ink-950/55" />
+      <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/25 to-paper/55" />
       <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_45%,transparent_38%,rgba(6,5,10,0.72)_100%)]" />
 
       {/* top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-3 sm:p-4">
-        <span className="flex items-center gap-2 border border-white/15 bg-ink-950/70 px-2.5 py-1 backdrop-blur-md">
+        <span className="flex items-center gap-2 border border-white/15 bg-paper/70 px-2.5 py-1 backdrop-blur-md">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: `rgb(${archetype.accent})` }}
           />
-          <span className="label !text-[0.625rem] !tracking-[0.16em] !text-ivory-2">
-            Final episode · Dream outcome
+          <span className="label !text-[0.625rem] !tracking-[0.16em] !text-ink-2">
+            Final episode · Your dream soulmate
           </span>
         </span>
 
@@ -146,7 +146,7 @@ export function DreamScene({
           type="button"
           onClick={finished ? replay : play}
           aria-label={finished ? 'Replay scene' : 'Play scene'}
-          className="absolute inset-0 z-20 m-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-ink-950/45 text-ivory backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-ink-950/70 sm:h-20 sm:w-20"
+          className="absolute inset-0 z-20 m-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-paper/45 text-ink backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-paper/70 sm:h-20 sm:w-20"
         >
           <span
             className="absolute -inset-px rounded-full opacity-60"
@@ -206,7 +206,7 @@ export function DreamScene({
       </div>
 
       {/* bottom controls */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-white/10 bg-gradient-to-t from-ink-950/90 to-transparent px-3 py-2.5 sm:px-4">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-white/10 bg-gradient-to-t from-paper/90 to-transparent px-3 py-2.5 sm:px-4">
         <span className="label !text-[0.625rem] !tracking-[0.16em]">
           Beat {beat + 1} / {beats.length}
         </span>
@@ -249,8 +249,8 @@ function SceneButton({
       aria-label={label}
       className={`flex items-center gap-1.5 border px-2.5 py-1 text-[0.6875rem] font-medium backdrop-blur-md transition-all duration-200 ${
         active
-          ? 'border-white/40 bg-white/15 text-ivory'
-          : 'border-white/15 bg-ink-950/70 text-ivory-2 hover:border-white/35 hover:text-ivory'
+          ? 'border-white/40 bg-white/15 text-ink'
+          : 'border-white/15 bg-paper/70 text-ink-2 hover:border-white/35 hover:text-ink'
       }`}
     >
       {children}

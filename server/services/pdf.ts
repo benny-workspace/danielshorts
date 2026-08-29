@@ -265,7 +265,7 @@ export function renderBlueprintPdf(
     email: string;
     orderId: string;
     /**
-     * Drives which edition is printed. The bundle tiers add the Dream Outcome
+     * Drives which edition is printed. The bundle tiers add the Dream Soulmate
      * Script and the five archetype books — the deliverables their product
      * cards promise. Defaults to the base edition.
      */
@@ -448,7 +448,7 @@ export function renderBlueprintPdf(
     });
 
     // ---- 12. Dream scenario ---------------------------------------------
-    L.page('Chapter Eight').kicker('Your dream outcome scene');
+    L.page('Chapter Eight').kicker('Your dream soulmate scene');
     L.title(content.dreamScenario.title || 'Final Episode');
     if (sanitize(content.dreamScenario.hangul)) {
       L.body(content.dreamScenario.hangul, { italic: true, color: GOLD });
@@ -532,7 +532,7 @@ export function renderBlueprintPdf(
         });
       };
 
-      L.page('Chapter Ten').kicker('Bundle exclusive · your dream outcome script');
+      L.page('Chapter Ten').kicker('Bundle exclusive · your dream soulmate script');
       L.title('The scene, written to be filmed.');
       if (script?.logline) {
         L.body(script.logline, { italic: true, color: MUTED, size: 11 });

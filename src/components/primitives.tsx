@@ -99,7 +99,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             className={`pointer-events-auto max-w-sm border px-4 py-3 text-sm shadow-2xl backdrop-blur-md ${
               toast.tone === 'error'
                 ? 'border-rose-deep/60 bg-rose-deep/20 text-rose-2'
-                : 'border-line bg-ink-800/95 text-ivory'
+                : 'border-line bg-paper-3/95 text-ink'
             }`}
             style={{ animation: 'toast-in 320ms cubic-bezier(0.16,1,0.3,1)' }}
           >
@@ -157,7 +157,7 @@ export function Sheet({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-ink-950/80 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-paper/80 backdrop-blur-sm"
         style={{ animation: 'fade-in 240ms ease' }}
       />
       <div
@@ -166,7 +166,7 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative flex h-full w-full max-w-md flex-col border-l border-line bg-ink-900 outline-none"
+        className="relative flex h-full w-full max-w-md flex-col border-l border-line bg-paper-2 outline-none"
         style={{ animation: 'slide-in 380ms cubic-bezier(0.16,1,0.3,1)' }}
       >
         <header className="flex items-start justify-between gap-4 border-b border-line-soft px-6 py-5">
@@ -178,7 +178,7 @@ export function Sheet({
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="-mr-2 -mt-1 p-2 text-ivory-3 transition-colors hover:text-ivory"
+            className="-mr-2 -mt-1 p-2 text-ink-3 transition-colors hover:text-ink"
           >
             <X size={18} strokeWidth={1.5} />
           </button>
