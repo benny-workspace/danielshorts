@@ -188,7 +188,7 @@ export function sendResultEmail(params: {
     <p style="margin:0 0 10px;font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:2px;color:#c33c56;font-weight:700;">YOUR ARCHETYPE</p>
     <h1 style="margin:0 0 12px;font-size:28px;line-height:1.2;color:#14121a;font-weight:normal;">${params.archetypeTitle}</h1>
     <p style="margin:0 0 24px;font-style:italic;color:#6b6472;">${params.hook}</p>
-    <p style="margin:0 0 24px;">${button(params.resultUrl, 'Replay your dream scene')}</p>`;
+    <p style="margin:0 0 24px;">${button(params.resultUrl, 'Meet your dream soulmate')}</p>`;
 
   return send({
     to: params.to,

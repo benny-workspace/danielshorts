@@ -7,7 +7,7 @@ import { Reveal } from './primitives';
 const STEPS = [
   { n: '01', title: 'Seven questions', body: 'Pick the scene that moves you.' },
   { n: '02', title: 'Your archetype', body: 'One of five leads. Plus your match with the rest.' },
-  { n: '03', title: 'Your dream scene', body: 'Played out like a final-episode confession.' },
+  { n: '03', title: 'Your dream soulmate', body: 'Played out like a final-episode confession.' },
 ];
 
 export function Landing({ onStart }: { onStart: () => void }) {
@@ -20,10 +20,10 @@ export function Landing({ onStart }: { onStart: () => void }) {
             src={image('hero')}
             alt=""
             aria-hidden="true"
-            className="h-full w-full scale-105 object-cover object-[50%_35%] opacity-60"
+            className="h-full w-full scale-105 object-cover object-[50%_35%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/70 to-ink-950/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/70 to-paper/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-paper/70 via-transparent to-transparent" />
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[92svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 md:pb-24">
@@ -35,7 +35,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </Reveal>
 
           <Reveal delay={90}>
-            <h1 className="display-xl mt-6 max-w-[16ch] text-ivory">
+            <h1 className="display-xl mt-6 max-w-[16ch] text-ink">
               Which K-drama love interest is written for you?
             </h1>
           </Reveal>
@@ -56,7 +56,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
                   className="transition-transform duration-300 group-hover:translate-x-1"
                 />
               </button>
-              <p className="text-sm text-ivory-3">
+              <p className="text-sm text-ink-3">
                 {QUESTIONS.length} questions · 2 minutes · free
               </p>
             </div>
@@ -65,7 +65,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
       </section>
 
       {/* -------------------------------------------------------- the five */}
-      <section className="relative z-10 border-t border-line-soft bg-ink-950">
+      <section className="relative z-10 border-t border-line-soft bg-paper">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
@@ -75,20 +75,20 @@ export function Landing({ onStart }: { onStart: () => void }) {
                   Five leads. One of them is yours.
                 </h2>
               </div>
-              <p className="max-w-[30ch] text-sm leading-relaxed text-ivory-3">
+              <p className="max-w-[30ch] text-sm leading-relaxed text-ink-3">
                 Each one is a different answer to: what does being loved well look
                 like to you?
               </p>
             </div>
           </Reveal>
 
-          <div className="mt-14 grid gap-px border border-line-soft bg-line-soft sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {ARCHETYPE_IDS.map((id, index) => {
               const archetype = ARCHETYPES[id];
               return (
                 <Reveal key={id} delay={index * 70}>
                   <article
-                    className="group relative h-full overflow-hidden bg-ink-900"
+                    className="card group relative h-full"
                     style={{ ['--accent' as string]: archetype.accent }}
                   >
                     <div className="relative aspect-[4/5] overflow-hidden lg:aspect-[3/4]">
@@ -96,13 +96,13 @@ export function Landing({ onStart }: { onStart: () => void }) {
                         src={image(archetype.imageKey)}
                         alt={archetype.title}
                         loading="lazy"
-                        className="h-full w-full object-cover opacity-70 transition-all duration-[900ms] ease-out group-hover:scale-105 group-hover:opacity-90"
+                        className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
                       />
-                      {/* Runs to solid ink-900 so the title block below, which
+                      {/* Runs to solid paper-2 so the title block below, which
                           is pulled up over the still, always sits on a clean
                           ground rather than on busy image detail. */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/75 to-transparent" />
-                      <span className="numeral absolute left-4 top-3 text-2xl text-ivory/35">
+                      <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/30 to-transparent" />
+                      <span className="numeral absolute left-4 top-3 text-2xl text-ink/35">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                     </div>
@@ -114,8 +114,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
                       >
                         {archetype.essence}
                       </p>
-                      <h3 className="display-md text-ivory">{archetype.shortTitle}</h3>
-                      <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-ivory-3">
+                      <h3 className="display-md text-ink">{archetype.shortTitle}</h3>
+                      <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-ink-3">
                         {archetype.hook}
                       </p>
                     </div>
@@ -128,15 +128,15 @@ export function Landing({ onStart }: { onStart: () => void }) {
       </section>
 
       {/* ----------------------------------------------------- how it works */}
-      <section className="relative z-10 border-t border-line-soft bg-ink-900">
+      <section className="relative z-10 border-t border-line-soft bg-paper-2">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
           <div className="grid gap-12 md:grid-cols-3 md:gap-8">
             {STEPS.map((step, index) => (
               <Reveal key={step.n} delay={index * 90}>
                 <div className="border-t border-line pt-6">
-                  <span className="numeral text-4xl text-ivory/20">{step.n}</span>
+                  <span className="numeral text-4xl text-ink/20">{step.n}</span>
                   <h3 className="display-md mt-4">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-ivory-3">{step.body}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-3">{step.body}</p>
                 </div>
               </Reveal>
             ))}

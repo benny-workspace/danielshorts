@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccountSheet } from './components/Account';
 import { Footer, Header, Proof } from './components/Chrome';
 import { Landing } from './components/Landing';
-import { Offers, OffersCue } from './components/Offers';
+import { Offers } from './components/Offers';
 import { OrderStatusPanel } from './components/OrderStatus';
 import { Quiz } from './components/Quiz';
 import { Result } from './components/Result';
@@ -194,8 +194,13 @@ function AppShell() {
     });
   }, []);
 
-  const finishQuiz = useCallback(() => {
-    const filled = answers.filter(Boolean) as ArchetypeId[];
+  /*
+   * Takes the finished answers from the quiz rather than reading them back out
+   * of state. The seventh answer both records itself and ends the quiz, so the
+   * state update behind it has not necessarily committed by the time this runs
+   * — reading `answers` here would score six answers out of seven.
+   */
+  const finishQuiz = useCallback((filled: ArchetypeId[]) => {
     const result = scoreQuiz(filled);
 
     track('quiz_complete', { archetype: result.winner });
@@ -215,7 +220,7 @@ function AppShell() {
     setStage('result');
     window.scrollTo({ top: 0, behavior: 'auto' });
     window.setTimeout(() => petals(), 400);
-  }, [answers, petals]);
+  }, [petals]);
 
   const onToggleFavorite = useCallback(() => {
     const next = toggleFavorite(winner);
@@ -274,9 +279,6 @@ function AppShell() {
               favorited={favorites.some((favorite) => favorite.id === winner)}
               onToggleFavorite={onToggleFavorite}
             />
-            {/* Most readers stopped at the result and never scrolled far
-                enough to learn there was anything to buy. */}
-            <OffersCue />
             <Offers
               config={config}
               email={email}

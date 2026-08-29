@@ -91,8 +91,8 @@ export function AccountSheet({
             ))}
           </div>
         ) : (
-          <p className="mt-4 text-sm leading-relaxed text-ivory-3">
-            Nothing saved yet. Tap <span className="text-ivory-2">Save</span> on a result
+          <p className="mt-4 text-sm leading-relaxed text-ink-3">
+            Nothing saved yet. Tap <span className="text-ink-2">Save</span> on a result
             to keep it here.
           </p>
         )}
@@ -104,14 +104,14 @@ export function AccountSheet({
 
         {me?.authenticated ? (
           <>
-            <p className="mt-3 text-xs text-ivory-3">Signed in as {me.user?.email}</p>
+            <p className="mt-3 text-xs text-ink-3">Signed in as {me.user?.email}</p>
 
             {orders === null ? (
-              <p className="mt-4 flex items-center gap-2 text-sm text-ivory-3">
+              <p className="mt-4 flex items-center gap-2 text-sm text-ink-3">
                 <Loader2 size={14} className="animate-spin" /> Loading your orders…
               </p>
             ) : orders.length === 0 ? (
-              <p className="mt-4 text-sm leading-relaxed text-ivory-3">
+              <p className="mt-4 text-sm leading-relaxed text-ink-3">
                 No purchases on this address yet.
               </p>
             ) : (
@@ -119,12 +119,12 @@ export function AccountSheet({
                 {orders.map((order) => (
                   <li key={order.id} className="border border-line-soft p-4">
                     <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-sm text-ivory">{order.productName}</p>
-                      <p className="numeral shrink-0 text-sm text-ivory-2">
+                      <p className="text-sm text-ink">{order.productName}</p>
+                      <p className="numeral shrink-0 text-sm text-ink-2">
                         {money(order.amountPaid)}
                       </p>
                     </div>
-                    <p className="mt-1 text-[0.6875rem] text-ivory-3">
+                    <p className="mt-1 text-[0.6875rem] text-ink-3">
                       {new Date(order.createdAt).toLocaleDateString()} ·{' '}
                       {order.archetypeTitle ?? '—'}
                     </p>
@@ -148,7 +148,7 @@ export function AccountSheet({
                             onClick={() => track('template_click')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-xs text-ivory-2 transition-opacity hover:opacity-80"
+                            className="inline-flex items-center gap-2 text-xs text-ink-2 transition-opacity hover:opacity-80"
                           >
                             <ExternalLink size={12} strokeWidth={1.8} />
                             Notion planner
@@ -156,7 +156,7 @@ export function AccountSheet({
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-3 text-[0.6875rem] capitalize text-ivory-3">
+                      <p className="mt-3 text-[0.6875rem] capitalize text-ink-3">
                         Status: {order.status}
                       </p>
                     )}
@@ -180,7 +180,7 @@ export function AccountSheet({
           </>
         ) : (
           <>
-            <p className="mt-3 text-sm leading-relaxed text-ivory-3">
+            <p className="mt-3 text-sm leading-relaxed text-ink-3">
               {accountsEnabled
                 ? 'Sign in with a one-time link to see everything you have bought and re-download it any time.'
                 : 'Sign-in needs an email provider connected. Your download links still arrive by email after each purchase.'}

@@ -1,7 +1,8 @@
 import type { ArchetypeId } from '@shared/archetypes';
 import type { ProductTier } from '@shared/products';
-import { ArrowDown, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowRight, Check, Loader2, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { image } from '../assets';
 import { track, trackingIds, trackOnce } from '../lib/analytics';
 import { createCheckoutSession, type AppConfig, type PublicProduct } from '../lib/api';
@@ -35,11 +36,11 @@ export function OffersCue() {
         <button
           type="button"
           onClick={scroll}
-          className="group block w-full border border-[rgb(var(--accent)/0.45)] bg-[rgb(var(--accent)/0.07)] px-6 py-10 text-center transition-colors hover:bg-[rgb(var(--accent)/0.12)] sm:py-12"
+          className="group block w-full rounded-[var(--radius-card)] border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--accent)/0.06)] px-6 py-10 text-center transition-colors hover:bg-[rgb(var(--accent)/0.11)] sm:py-12"
         >
           <p className="label label-accent">Wait —</p>
           <h2 className="display-xl mt-3 text-balance">This is what you missed.</h2>
-          <p className="mx-auto mt-4 max-w-[30ch] text-sm leading-relaxed text-ivory-2">
+          <p className="mx-auto mt-4 max-w-[30ch] text-sm leading-relaxed text-ink-2">
             Your result is one page. The rest of your story is written below.
           </p>
           <span className="mt-7 inline-flex items-center gap-2.5 text-[rgb(var(--accent))]">
@@ -83,6 +84,8 @@ export function Offers({
   const money = useMoney();
   const [pending, setPending] = useState<ProductTier | null>(null);
   const [emailPrompt, setEmailPrompt] = useState(email ?? '');
+  /** The product a buyer has chosen, while the email dialog is open. */
+  const [chosen, setChosen] = useState<PublicProduct | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
 
   const products = config?.products ?? [];
@@ -113,22 +116,23 @@ export function Offers({
     return () => observer.disconnect();
   }, [winner]);
 
-  const buy = async (product: PublicProduct) => {
-    const buyerEmail = (email ?? emailPrompt).trim();
-    if (!buyerEmail) {
-      toast('Add your email above so we know where to send it.', 'error');
-      return;
-    }
-
-    // Recorded before the request, so a checkout that fails to open is still
-    // counted as intent. The gap between this and "reached Stripe" on the
-    // dashboard is exactly the failure the last release fixed.
+  /**
+   * Pressing buy opens the dialog rather than starting checkout.
+   *
+   * The click is recorded here, not after the address is given: this is the
+   * moment of intent, and counting it here is what makes an abandoned dialog
+   * visible on the dashboard instead of looking like nobody was interested.
+   */
+  const choose = (product: PublicProduct) => {
     track('checkout_click', {
       tier: product.tier,
       archetype: winner,
       value: product.amount,
     });
+    setChosen(product);
+  };
 
+  const buy = async (product: PublicProduct, buyerEmail: string) => {
     setPending(product.tier);
     try {
       const session = await createCheckoutSession({
@@ -165,40 +169,15 @@ export function Offers({
         <h2 className="display-lg mt-3 max-w-[20ch]">Your full story.</h2>
       </Reveal>
 
-      {!email ? (
-        <Reveal delay={80}>
-          {/*
-            The only place an address is asked for now. It sits with the buy
-            buttons rather than in front of the result, so it is answered by
-            people who have already decided to buy something — and it is the
-            address the product is delivered to, not a subscription.
-          */}
-          <div className="mt-8 flex flex-col gap-3 border border-line-soft p-4 sm:flex-row sm:items-center">
-            <label htmlFor="offer-email" className="label shrink-0">
-              Send it to
-            </label>
-            <input
-              id="offer-email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              value={emailPrompt}
-              onChange={(event) => setEmailPrompt(event.target.value)}
-              placeholder="you@example.com"
-              className="field"
-            />
-          </div>
-        </Reveal>
-      ) : null}
 
-      <div className="mt-10 grid gap-px border border-line-soft bg-line-soft md:grid-cols-3">
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
         {products.map((product, index) => {
           const featured = product.tier === 'bundle';
           return (
             <Reveal key={product.tier} delay={index * 90}>
               <article
-                className={`relative flex h-full flex-col bg-ink-900 ${featured ? 'md:-my-4 md:shadow-[0_30px_80px_-40px_rgb(var(--accent)/0.6)]' : ''}`}
-                style={featured ? { boxShadow: 'inset 0 0 0 1px rgb(var(--accent) / 0.35)' } : undefined}
+                className={`card relative flex h-full flex-col ${featured ? 'md:-my-4 md:shadow-[0_24px_60px_-30px_rgb(var(--accent)/0.45)]' : ''}`}
+                style={featured ? { borderColor: 'rgb(var(--accent) / 0.55)' } : undefined}
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img
@@ -206,13 +185,13 @@ export function Offers({
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
-                    className="h-full w-full object-cover opacity-55 transition-opacity duration-700 hover:opacity-75"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/20 to-transparent" />
                   {product.badge ? (
-                    <span className="absolute left-4 top-4 flex items-center gap-1.5 border border-[rgb(var(--accent)/0.5)] bg-ink-950/80 px-2.5 py-1 backdrop-blur-sm">
-                      <Sparkles size={11} strokeWidth={1.5} className="text-[rgb(var(--accent))]" />
-                      <span className="label !text-[0.5625rem] !tracking-[0.16em] label-accent">
+                    <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-[rgb(var(--accent))] px-3 py-1 shadow-sm">
+                      <Sparkles size={11} strokeWidth={1.5} className="text-white" />
+                      <span className="label !text-[0.5625rem] !tracking-[0.16em] !text-white">
                         {product.badge}
                       </span>
                     </span>
@@ -222,7 +201,7 @@ export function Offers({
                 <div className="flex flex-1 flex-col p-6">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="label">{product.kicker}</p>
-                    <p className="numeral text-3xl text-ivory">{money(product.amount)}</p>
+                    <p className="numeral text-3xl text-ink">{money(product.amount)}</p>
                   </div>
 
                   <h3 className="display-md mt-4 text-balance">{product.name}</h3>
@@ -233,7 +212,7 @@ export function Offers({
                       a form that survives being skimmed. */}
                   <ul className="mt-5 space-y-2.5 border-t border-line-soft pt-5">
                     {product.deliverables.map((item) => (
-                      <li key={item} className="flex gap-2.5 text-[0.8125rem] leading-snug text-ivory-2">
+                      <li key={item} className="flex gap-2.5 text-[0.8125rem] leading-snug text-ink-2">
                         <Check
                           size={13}
                           strokeWidth={1.6}
@@ -247,7 +226,7 @@ export function Offers({
                   <div className="mt-auto pt-7">
                     <button
                       type="button"
-                      onClick={() => buy(product)}
+                      onClick={() => choose(product)}
                       disabled={!checkoutEnabled || !product.available || pending !== null}
                       className={`btn w-full ${featured ? 'btn-primary' : 'btn-ghost'}`}
                     >
@@ -265,7 +244,7 @@ export function Offers({
                     </button>
 
                     {!checkoutEnabled || !product.available ? (
-                      <p className="mt-3 text-center text-[0.6875rem] leading-relaxed text-ivory-3">
+                      <p className="mt-3 text-center text-[0.6875rem] leading-relaxed text-ink-3">
                         Checkout is not connected yet.
                       </p>
                     ) : null}
@@ -279,7 +258,7 @@ export function Offers({
 
       {config && checkoutEnabled && !config.features.fulfillmentReady ? (
         <Reveal delay={200}>
-          <p className="mt-6 border border-gold/25 bg-gold/5 px-4 py-3 text-xs leading-relaxed text-ivory-2">
+          <p className="mt-6 border border-gold/25 bg-gold/5 px-4 py-3 text-xs leading-relaxed text-ink-2">
             <span className="font-semibold text-gold">Setup note (only you see this):</span>{' '}
             payments will go through, but <code className="text-gold">STRIPE_WEBHOOK_SECRET</code>{' '}
             is not set — so blueprints will not generate or send automatically yet.
@@ -288,10 +267,165 @@ export function Offers({
       ) : null}
 
       <Reveal delay={240}>
-        <p className="mt-8 text-center text-[0.6875rem] leading-relaxed text-ivory-3">
+        <p className="mt-8 text-center text-[0.6875rem] leading-relaxed text-ink-3">
           Stripe checkout · Instant download · For fun, not therapy.
         </p>
       </Reveal>
+
+      <EmailDialog
+        product={chosen}
+        initialEmail={emailPrompt}
+        busy={pending !== null}
+        onCancel={() => setChosen(null)}
+        onConfirm={(address) => {
+          setEmailPrompt(address);
+          void buy(chosen!, address);
+        }}
+      />
     </section>
+  );
+}
+
+/**
+ * Collects the delivery address at the last possible moment.
+ *
+ * One field and one button. There is no name field because nothing downstream
+ * uses a name — asking for it would be a second thing to type in exchange for
+ * nothing, at the exact point where a buyer is most likely to give up.
+ */
+function EmailDialog({
+  product,
+  initialEmail,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  product: PublicProduct | null;
+  initialEmail: string;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: (email: string) => void;
+}) {
+  const money = useMoney();
+  const [value, setValue] = useState(initialEmail);
+  const [touched, setTouched] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!product) return;
+    setValue(initialEmail);
+    setTouched(false);
+    // Focus after paint, or the keyboard does not open on iOS.
+    const id = window.setTimeout(() => inputRef.current?.focus(), 60);
+
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onCancel();
+    window.addEventListener('keydown', onKey);
+
+    // Stop the page behind the dialog scrolling under it on touch.
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [product, initialEmail, onCancel]);
+
+  if (!product) return null;
+
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
+
+  /*
+   * Rendered into <body> rather than in place. The offers live inside a <main>
+   * that sets z-10, which caps every descendant's stacking against siblings of
+   * main — including the falling-petal layer, which would otherwise paint over
+   * the dialog however high its own z-index went.
+   *
+   * z-68 keeps it above the petals and the grain plate but below the toasts, so
+   * a checkout error is still readable while the dialog is open.
+   */
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[68] flex items-end justify-center bg-ink/25 p-4 backdrop-blur-sm sm:items-center"
+      style={{ animation: 'dialog-in 200ms ease-out' }}
+      onClick={onCancel}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="buy-title"
+        className="panel-raised w-full max-w-sm p-6 sm:p-7"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="Close"
+          className="float-right -mr-1 -mt-1 p-1 text-ink-3 transition-colors hover:text-ink"
+        >
+          <X size={18} strokeWidth={1.8} />
+        </button>
+
+        <p className="label label-accent">{product.name}</p>
+        <h2 id="buy-title" className="display-md mt-2">
+          Get your bundle!
+        </h2>
+        <p className="mt-2 text-[0.8125rem] leading-relaxed text-ink-2">
+          Where should we send it? Arrives in under two minutes.
+        </p>
+
+        <form
+          className="mt-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setTouched(true);
+            if (valid && !busy) onConfirm(value.trim());
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            enterKeyHint="go"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onBlur={() => setTouched(true)}
+            placeholder="you@example.com"
+            aria-invalid={touched && !valid}
+            className="field"
+          />
+
+          {touched && !valid ? (
+            <p className="mt-2 text-xs text-rose-2">Check that address and try again.</p>
+          ) : null}
+
+          <button type="submit" disabled={busy} className="btn btn-primary mt-4 w-full">
+            {busy ? (
+              <>
+                <Loader2 size={15} className="animate-spin" strokeWidth={2} />
+                Opening checkout…
+              </>
+            ) : (
+              <>
+                Get it for {money(product.amount)}
+                <ArrowRight size={15} strokeWidth={1.8} />
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="mt-3 text-center text-[0.6875rem] text-ink-3">
+          Secure payment by Stripe.
+        </p>
+      </div>
+
+      <style>{`
+        @keyframes dialog-in { from { opacity: 0 } to { opacity: 1 } }
+      `}</style>
+    </div>,
+    document.body,
   );
 }

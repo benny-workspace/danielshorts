@@ -19,7 +19,7 @@ export interface BlueprintContent {
   }>;
   dreamScenario: { title: string; hangul: string; scenes: string[] };
   /**
-   * The shot-by-shot Dream Outcome Script. Only printed for the bundle tiers,
+   * The shot-by-shot Dream Soulmate Script. Only printed for the bundle tiers,
    * but always generated — it costs nothing extra and keeps the two paths
    * producing the same object shape.
    */

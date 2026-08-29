@@ -12,6 +12,7 @@ import { image } from '../assets';
 import { downloadBlob, renderResultCard, shareArchetype } from '../lib/share';
 import { Meter, Reveal, useToast } from './primitives';
 import { DreamScene } from './DreamScene';
+import { OffersCue } from './Offers';
 
 export function Result({
   archetype,
@@ -72,7 +73,7 @@ export function Result({
 
           <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="display-md text-ivory-3">{archetype.essence}</p>
+              <p className="display-md text-ink-3">{archetype.essence}</p>
               <h1 className="display-xl mt-2 max-w-[15ch] text-balance">{archetype.title}</h1>
             </div>
 
@@ -98,7 +99,7 @@ export function Result({
         </Reveal>
 
         <Reveal delay={120}>
-          <p className="display-lg mt-8 max-w-[24ch] italic text-ivory-2">{archetype.hook}</p>
+          <p className="display-lg mt-8 max-w-[24ch] italic text-ink-2">{archetype.hook}</p>
         </Reveal>
       </section>
 
@@ -108,6 +109,13 @@ export function Result({
           <DreamScene archetype={archetype} autoPlay />
         </Reveal>
       </section>
+
+      {/*
+        Immediately under the scene, which is the high point of the free
+        result and the moment attention is highest. Sitting after the
+        compatibility table meant most readers had already stopped.
+      */}
+      <OffersCue />
 
       {/* ------------------------------------------------------- the read */}
       <section className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-28">
@@ -127,18 +135,18 @@ export function Result({
                 className="flex items-center gap-2 border border-line px-3.5 py-2 text-left transition-colors hover:border-[rgb(var(--accent)/0.5)]"
               >
                 <span className="label !tracking-[0.14em] label-accent">Core trait</span>
-                <span className="text-sm text-ivory">{archetype.trait}</span>
-                <Info size={13} strokeWidth={1.5} className="text-ivory-3" />
+                <span className="text-sm text-ink">{archetype.trait}</span>
+                <Info size={13} strokeWidth={1.5} className="text-ink-3" />
               </button>
 
               {traitOpen ? (
                 <div
                   role="tooltip"
-                  className="absolute bottom-full left-0 z-40 mb-2 w-[min(22rem,80vw)] border border-line bg-ink-800 p-4 shadow-2xl"
+                  className="absolute bottom-full left-0 z-40 mb-2 w-[min(22rem,80vw)] border border-line bg-paper-3 p-4 shadow-2xl"
                   style={{ animation: 'fade-up 200ms cubic-bezier(0.16,1,0.3,1)' }}
                 >
                   <p className="label label-accent mb-2">Why it lands on screen</p>
-                  <p className="text-[0.8125rem] leading-relaxed text-ivory-2">
+                  <p className="text-[0.8125rem] leading-relaxed text-ink-2">
                     {archetype.traitExplanation}
                   </p>
                 </div>
@@ -158,7 +166,7 @@ export function Result({
                       className="mt-1 shrink-0"
                       style={{ color: `rgb(${archetype.accent})` }}
                     />
-                    <span className="text-[0.9375rem] leading-relaxed text-ivory-2">{signal}</span>
+                    <span className="text-[0.9375rem] leading-relaxed text-ink-2">{signal}</span>
                   </li>
                 ))}
               </ul>
@@ -173,13 +181,13 @@ export function Result({
                 <div className="mt-4 space-y-3">
                   {score.ranking.map((row) => (
                     <div key={row.id} className="flex items-center gap-3">
-                      <span className="w-[13ch] shrink-0 truncate text-xs text-ivory-3">
+                      <span className="w-[13ch] shrink-0 truncate text-xs text-ink-3">
                         {ARCHETYPES[row.id].essence}
                       </span>
                       <div className="flex-1">
                         <Meter percent={row.percent} />
                       </div>
-                      <span className="numeral w-9 shrink-0 text-right text-xs text-ivory-2">
+                      <span className="numeral w-9 shrink-0 text-right text-xs text-ink-2">
                         {row.percent}%
                       </span>
                     </div>
@@ -192,7 +200,7 @@ export function Result({
       </section>
 
       {/* ---------------------------------------------------- compatibility */}
-      <section className="border-y border-line-soft bg-ink-900">
+      <section className="border-y border-line-soft bg-paper-2">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-28">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
@@ -202,7 +210,7 @@ export function Result({
                   You against the other four.
                 </h2>
               </div>
-              <p className="max-w-[28ch] text-sm leading-relaxed text-ivory-3">
+              <p className="max-w-[28ch] text-sm leading-relaxed text-ink-3">
                 Higher is not better — just less friction. The best pairings sit in
                 the middle.
               </p>
@@ -231,17 +239,17 @@ export function Result({
                       {other.essence}
                     </p>
                     <h3 className="display-md mt-1.5">{other.shortTitle}</h3>
-                    <p className="mt-1.5 text-xs text-ivory-3">{compatibility.label}</p>
+                    <p className="mt-1.5 text-xs text-ink-3">{compatibility.label}</p>
                   </div>
 
-                  <p className="text-[0.875rem] leading-relaxed text-ivory-2">
+                  <p className="text-[0.875rem] leading-relaxed text-ink-2">
                     {compatibility.desc}
                   </p>
 
                   <div className="md:text-right">
                     <p className="numeral text-3xl" style={{ color: `rgb(${other.accent})` }}>
                       {compatibility.percent}
-                      <span className="text-base text-ivory-3">%</span>
+                      <span className="text-base text-ink-3">%</span>
                     </p>
                     <div className="mt-2">
                       <Meter percent={compatibility.percent} delay={index * 90} />
@@ -282,7 +290,7 @@ function ActionButton({
       className={`flex items-center gap-2 border px-3.5 py-2.5 text-xs font-medium transition-all duration-200 disabled:opacity-50 ${
         active
           ? 'border-[rgb(var(--accent)/0.55)] bg-[rgb(var(--accent)/0.1)] text-[rgb(var(--accent))]'
-          : 'border-line text-ivory-2 hover:border-[rgb(var(--accent)/0.45)] hover:text-ivory'
+          : 'border-line text-ink-2 hover:border-[rgb(var(--accent)/0.45)] hover:text-ink'
       }`}
     >
       {children}
@@ -312,13 +320,13 @@ export function ArchetypeTile({
       />
       <div className="min-w-0 flex-1">
         <p className="label !tracking-[0.12em] label-accent">{archetype.essence}</p>
-        <p className="mt-1 truncate text-sm text-ivory">{archetype.shortTitle}</p>
+        <p className="mt-1 truncate text-sm text-ink">{archetype.shortTitle}</p>
       </div>
       {onRemove ? (
         <button
           type="button"
           onClick={onRemove}
-          className="shrink-0 text-xs text-ivory-3 transition-colors hover:text-rose-2"
+          className="shrink-0 text-xs text-ink-3 transition-colors hover:text-rose-2"
         >
           Remove
         </button>
