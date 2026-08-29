@@ -1,6 +1,14 @@
 import type { ArchetypeId } from './archetypes.js';
 
 export interface QuizOption {
+  /**
+   * Visual anchor, shown in place of the letter badge.
+   *
+   * This audience arrives from short-form video and scans rather than reads —
+   * an emoji is parsed before the sentence beside it is, which is the whole
+   * point of putting one on every answer.
+   */
+  emoji: string;
   text: string;
   archetype: ArchetypeId;
 }
@@ -12,190 +20,91 @@ export interface QuizQuestion {
   options: QuizOption[];
 }
 
+/**
+ * Seven questions, five answers each, always in the same archetype order:
+ * best friend, heir, leader, artist, rival. Keeping that order fixed is what
+ * lets an answer be rewritten without silently re-scoring the quiz.
+ *
+ * Answers are deliberately short. They were a full sentence each and read like
+ * a novel on a phone; the pattern being measured survives the trim intact,
+ * because it lives in which scene is chosen, not in how it is described.
+ */
 export const QUESTIONS: QuizQuestion[] = [
   {
     chapter: 'The first flutter',
-    question:
-      'When walking home after a long day, what unexpected moment makes your heart flutter?',
+    question: 'Walking home. What makes your heart jump?',
     options: [
-      {
-        text: 'Someone quietly handing you your favourite hot drink without asking.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'A sleek car slowing down to offer an umbrella in a sudden drizzle.',
-        archetype: 'heir',
-      },
-      {
-        text: 'Someone standing up for a stranger on the bus and smiling at you afterwards.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Noticing someone sketching the evening sky in a quiet park corner.',
-        archetype: 'artist',
-      },
-      {
-        text: 'Exchanging witty banter with someone who always tries to beat your score.',
-        archetype: 'rival',
-      },
+      { emoji: '☕', text: 'Your drink, handed over. No asking.', archetype: 'best_friend' },
+      { emoji: '🚗', text: 'An umbrella, from a car that slowed down.', archetype: 'heir' },
+      { emoji: '🛡️', text: 'Someone defending a stranger.', archetype: 'leader' },
+      { emoji: '🎨', text: 'Someone sketching the sky.', archetype: 'artist' },
+      { emoji: '😏', text: 'Banter with someone trying to beat you.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'Caught in the rain',
-    question: 'A sudden rainstorm traps you at school or work. What is your instinct?',
+    question: 'Rain traps you inside. You…',
     options: [
-      {
-        text: 'Wait comfortably with someone who knows your umbrella story by heart.',
-        archetype: 'best_friend',
-      },
-      {
-        text: "Watch someone arrange a private shuttle so your shoes don't get wet.",
-        archetype: 'heir',
-      },
-      {
-        text: 'Take charge to organise extra coats and make sure everyone gets home safely.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Admire the rhythm of raindrops on glass and draft a dreamy poem or doodle.',
-        archetype: 'artist',
-      },
-      {
-        text: 'Challenge someone to a dash through the rain to see who reaches the café first.',
-        archetype: 'rival',
-      },
+      { emoji: '☔', text: 'Wait it out with your person.', archetype: 'best_friend' },
+      { emoji: '🚙', text: 'Watch a ride appear for you.', archetype: 'heir' },
+      { emoji: '🧥', text: 'Get everyone home safe.', archetype: 'leader' },
+      { emoji: '🎧', text: 'Watch the drops and drift.', archetype: 'artist' },
+      { emoji: '🏃', text: 'Race them to the café.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'How you love',
-    question: 'How do you prefer to show care when someone you cherish is stressed?',
+    question: 'They are stressed. You…',
     options: [
-      {
-        text: 'Preparing a cosy home-cooked meal and sitting together in peaceful silence.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'Sending a thoughtful, high-quality care package directly to their door.',
-        archetype: 'heir',
-      },
-      {
-        text: 'Writing an encouraging note with actionable advice and strong support.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Creating a customised music playlist or handwritten sketch for them.',
-        archetype: 'artist',
-      },
-      {
-        text: 'Helping them solve their hardest problem while keeping the mood light with jokes.',
-        archetype: 'rival',
-      },
+      { emoji: '🍜', text: 'Cook. Sit with them. Say nothing.', archetype: 'best_friend' },
+      { emoji: '🎁', text: 'Send something perfect to their door.', archetype: 'heir' },
+      { emoji: '✍️', text: 'Write them a plan and back it.', archetype: 'leader' },
+      { emoji: '🎵', text: 'Make them a playlist.', archetype: 'artist' },
+      { emoji: '🧩', text: 'Fix it, and make them laugh doing it.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'The hero shot',
-    question:
-      'In a story where someone is treated unfairly, what kind of hero scene moves you most?',
+    question: 'Someone gets treated unfairly. Best scene?',
     options: [
-      {
-        text: 'The quiet companion who stays by their side through every hardship without hesitation.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'The powerful figure who steps in and breaks rules to protect them.',
-        archetype: 'heir',
-      },
-      {
-        text: 'The brave voice speaking truth to authority in front of the entire assembly.',
-        archetype: 'leader',
-      },
-      {
-        text: 'The gentle soul who creates a safe haven where they can heal and be vulnerable.',
-        archetype: 'artist',
-      },
-      {
-        text: 'The sharp-witted rival who secretly orchestrates justice behind the scenes.',
-        archetype: 'rival',
-      },
+      { emoji: '🤝', text: 'The one who never leaves.', archetype: 'best_friend' },
+      { emoji: '💼', text: 'The one who breaks rules to protect.', archetype: 'heir' },
+      { emoji: '📣', text: 'The one who says it out loud.', archetype: 'leader' },
+      { emoji: '🕯️', text: 'The one who makes them feel safe.', archetype: 'artist' },
+      { emoji: '♟️', text: 'The one who fixes it in secret.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'Golden hour',
-    question: 'What setting feels most like your ideal romantic afternoon?',
+    question: 'Your perfect afternoon together?',
     options: [
-      {
-        text: 'Browsing a neighbourhood market and sharing ice cream on a sunny bench.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'Strolling through a private rooftop garden with an enchanting city view.',
-        archetype: 'heir',
-      },
-      {
-        text: 'Volunteering together at a community event followed by animated coffee debate.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Visiting a quiet art gallery or flower shop tucked in a sunlit alley.',
-        archetype: 'artist',
-      },
-      {
-        text: 'An intense game of trivia or arcade games where the winner picks dinner.',
-        archetype: 'rival',
-      },
+      { emoji: '🍦', text: 'Market stalls and shared ice cream.', archetype: 'best_friend' },
+      { emoji: '🌇', text: 'A rooftop garden, city below.', archetype: 'heir' },
+      { emoji: '☕', text: 'Volunteer, then argue over coffee.', archetype: 'leader' },
+      { emoji: '🖼️', text: 'A quiet gallery down a sunlit alley.', archetype: 'artist' },
+      { emoji: '🎮', text: 'Arcade. Winner picks dinner.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'Under pressure',
-    question:
-      'When facing an unexpected personal challenge, what quality do you rely on most?',
+    question: 'Everything goes wrong. What carries you?',
     options: [
-      {
-        text: 'Unwavering patience and belief that steady support brings peace.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'Determination to overcome limitations and build your independent path.',
-        archetype: 'heir',
-      },
-      {
-        text: 'Uncompromising sense of purpose and belief in doing what is right.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Creative intuition and finding beauty even in chaotic moments.',
-        archetype: 'artist',
-      },
-      {
-        text: 'Sharp strategic thinking and turning challenges into opportunities.',
-        archetype: 'rival',
-      },
+      { emoji: '🌱', text: 'Patience. It always passes.', archetype: 'best_friend' },
+      { emoji: '🔑', text: 'Building my own way out.', archetype: 'heir' },
+      { emoji: '🧭', text: 'Doing the right thing anyway.', archetype: 'leader' },
+      { emoji: '✨', text: 'Finding something beautiful in it.', archetype: 'artist' },
+      { emoji: '♜', text: 'Out-thinking it.', archetype: 'rival' },
     ],
   },
   {
     chapter: 'The detail that stays',
-    question: 'What small detail means the most to you in a deep relationship?',
+    question: 'The smallest thing that means the most?',
     options: [
-      {
-        text: 'Remembering a tiny preference you mentioned months ago in passing.',
-        archetype: 'best_friend',
-      },
-      {
-        text: 'Protecting your comfort and peace of mind before you even ask.',
-        archetype: 'heir',
-      },
-      {
-        text: 'Supporting your ambitions and inspiring you to stand tall for your values.',
-        archetype: 'leader',
-      },
-      {
-        text: 'Noticing subtle shifts in your mood that nobody else pays attention to.',
-        archetype: 'artist',
-      },
-      {
-        text: 'Knowing how to challenge you to grow while always having your back.',
-        archetype: 'rival',
-      },
+      { emoji: '🧠', text: 'They remembered something tiny.', archetype: 'best_friend' },
+      { emoji: '🛋️', text: 'They protect your peace first.', archetype: 'heir' },
+      { emoji: '🚀', text: 'They back what you are chasing.', archetype: 'leader' },
+      { emoji: '🌙', text: 'They notice your mood shift.', archetype: 'artist' },
+      { emoji: '🔥', text: 'They push you, and have your back.', archetype: 'rival' },
     ],
   },
 ];

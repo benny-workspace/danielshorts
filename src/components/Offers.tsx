@@ -1,6 +1,6 @@
 import type { ArchetypeId } from '@shared/archetypes';
 import type { ProductTier } from '@shared/products';
-import { ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowRight, Check, Loader2, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { image } from '../assets';
 import { track, trackingIds, trackOnce } from '../lib/analytics';
@@ -13,20 +13,71 @@ const IMAGE_KEYS: Record<ProductTier, string> = {
   coaching: 'product_coaching',
 };
 
+/** Where the cue scrolls to. */
+const OFFERS_ID = 'offers';
+
+/**
+ * The interruption between the result and the offers.
+ *
+ * The result reads as an ending — readers took it as the whole thing and left,
+ * never learning there was more. This exists to break that, so it is loud on
+ * purpose: full-width, high contrast, an arrow that keeps moving, and a tap
+ * target that scrolls rather than expecting anyone to keep going by themselves.
+ */
+export function OffersCue() {
+  const scroll = () => {
+    document.getElementById(OFFERS_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <section className="mx-auto w-full max-w-6xl px-5 pb-4 pt-10 sm:px-8">
+      <Reveal>
+        <button
+          type="button"
+          onClick={scroll}
+          className="group block w-full border border-[rgb(var(--accent)/0.45)] bg-[rgb(var(--accent)/0.07)] px-6 py-10 text-center transition-colors hover:bg-[rgb(var(--accent)/0.12)] sm:py-12"
+        >
+          <p className="label label-accent">Wait —</p>
+          <h2 className="display-xl mt-3 text-balance">This is what you missed.</h2>
+          <p className="mx-auto mt-4 max-w-[30ch] text-sm leading-relaxed text-ivory-2">
+            Your result is one page. The rest of your story is written below.
+          </p>
+          <span className="mt-7 inline-flex items-center gap-2.5 text-[rgb(var(--accent))]">
+            <span className="label label-accent">See it</span>
+            <ArrowDown
+              size={20}
+              strokeWidth={2}
+              className="animate-[cue-bounce_1.4s_ease-in-out_infinite]"
+            />
+          </span>
+        </button>
+      </Reveal>
+
+      <style>{`
+        @keyframes cue-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-\\[cue-bounce_1\\.4s_ease-in-out_infinite\\] { animation: none; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 export function Offers({
   config,
   email,
   answers,
   winner,
   attemptId,
-  name,
 }: {
   config: AppConfig | null;
   email: string | null;
   answers: ArchetypeId[];
   winner: ArchetypeId;
   attemptId: string | null;
-  name?: string;
 }) {
   const toast = useToast();
   const money = useMoney();
@@ -86,7 +137,6 @@ export function Offers({
         winningArchetype: winner,
         quizAnswers: answers,
         quizAttemptId: attemptId,
-        name,
         ...trackingIds(),
       });
 
@@ -105,32 +155,33 @@ export function Offers({
   if (!products.length) return null;
 
   return (
-    <section ref={sectionRef} className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 md:py-28">
+    <section
+      id={OFFERS_ID}
+      ref={sectionRef}
+      className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 pb-20 pt-8 sm:px-8 md:pb-28"
+    >
       <Reveal>
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="label label-accent">Go deeper</p>
-            <h2 className="display-lg mt-3 max-w-[20ch]">
-              The full read, written from your answers.
-            </h2>
-          </div>
-          <p className="max-w-[36ch] text-sm leading-relaxed text-ivory-3">
-            Your result is the headline. These are the pages underneath it — your
-            patterns, your blind spots, and the words for what you have been trying to
-            ask for.
-          </p>
-        </div>
+        <p className="label label-accent">Written from your answers</p>
+        <h2 className="display-lg mt-3 max-w-[20ch]">Your full story.</h2>
       </Reveal>
 
       {!email ? (
         <Reveal delay={80}>
-          <div className="mt-10 flex flex-col gap-3 border border-line-soft p-4 sm:flex-row sm:items-center">
+          {/*
+            The only place an address is asked for now. It sits with the buy
+            buttons rather than in front of the result, so it is answered by
+            people who have already decided to buy something — and it is the
+            address the product is delivered to, not a subscription.
+          */}
+          <div className="mt-8 flex flex-col gap-3 border border-line-soft p-4 sm:flex-row sm:items-center">
             <label htmlFor="offer-email" className="label shrink-0">
-              Deliver to
+              Send it to
             </label>
             <input
               id="offer-email"
               type="email"
+              inputMode="email"
+              autoComplete="email"
               value={emailPrompt}
               onChange={(event) => setEmailPrompt(event.target.value)}
               placeholder="you@example.com"
@@ -175,13 +226,12 @@ export function Offers({
                   </div>
 
                   <h3 className="display-md mt-4 text-balance">{product.name}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-ivory-3">{product.headline}</p>
 
-                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-ivory-2">
-                    {product.description}
-                  </p>
-
-                  <ul className="mt-6 space-y-2.5 border-t border-line-soft pt-5">
+                  {/* The prose description used to sit here as well. Between a
+                      headline, a paragraph and a bullet list, the paragraph was
+                      the part nobody read — the bullets carry the same value in
+                      a form that survives being skimmed. */}
+                  <ul className="mt-5 space-y-2.5 border-t border-line-soft pt-5">
                     {product.deliverables.map((item) => (
                       <li key={item} className="flex gap-2.5 text-[0.8125rem] leading-snug text-ivory-2">
                         <Check
@@ -239,8 +289,7 @@ export function Offers({
 
       <Reveal delay={240}>
         <p className="mt-8 text-center text-[0.6875rem] leading-relaxed text-ivory-3">
-          Secure payment by Stripe · Instant email delivery · Written for entertainment
-          and self-reflection, not clinical advice.
+          Stripe checkout · Instant download · For fun, not therapy.
         </p>
       </Reveal>
     </section>

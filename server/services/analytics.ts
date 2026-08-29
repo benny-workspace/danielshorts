@@ -590,12 +590,6 @@ function buildKanban(input: {
       visitors: step('result_view')?.visitors ?? 0,
       cards: [
         {
-          label: 'Left an email',
-          value: pct(step('optin_submit')?.rateFromTop ?? 0),
-          detail: 'Of everyone who landed. These are the ones you can re-contact.',
-          tone: tone(step('optin_submit')?.rateFromTop ?? 0, 20, 8),
-        },
-        {
           label: 'Scrolled to the offers',
           value: pct(step('offers_view')?.rateFromPrev ?? 0),
           detail: 'Of those who saw a result. Below 60% and the pitch is too far down the page.',

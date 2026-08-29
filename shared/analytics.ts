@@ -19,11 +19,14 @@ export const EVENT_NAMES = [
   'question_answered',
   /** Every question answered. */
   'quiz_complete',
-  /** The email capture screen was shown. */
+  /**
+   * Retired. The email gate between the quiz and the result was removed — it
+   * was the largest single drop in the funnel, and this traffic arrives with no
+   * intention of signing up for anything. The names stay so that rows recorded
+   * before the change still parse; nothing emits them now.
+   */
   'optin_view',
-  /** Left an email address. */
   'optin_submit',
-  /** Went to the result without leaving an email. */
   'optin_skip',
   /** The archetype result was revealed. */
   'result_view',
@@ -100,16 +103,6 @@ export const FUNNEL_STEPS: Array<{
     name: 'quiz_complete',
     label: 'Answered all seven',
     hint: 'Check the per-question chart to see exactly which question loses them.',
-  },
-  {
-    name: 'optin_view',
-    label: 'Saw the email ask',
-    hint: 'Everyone who finished should see this.',
-  },
-  {
-    name: 'optin_submit',
-    label: 'Left an email',
-    hint: 'Skips are not lost — they still see the result and can still buy.',
   },
   {
     name: 'result_view',

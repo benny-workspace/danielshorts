@@ -199,12 +199,12 @@ export function Result({
               <div>
                 <p className="label label-accent">Compatibility</p>
                 <h2 className="display-lg mt-3 max-w-[18ch]">
-                  How you play against the other four.
+                  You against the other four.
                 </h2>
               </div>
-              <p className="max-w-[36ch] text-sm leading-relaxed text-ivory-3">
-                Higher is not better — it is simply less friction. The most-watched
-                pairings usually sit somewhere in the middle.
+              <p className="max-w-[28ch] text-sm leading-relaxed text-ivory-3">
+                Higher is not better — just less friction. The best pairings sit in
+                the middle.
               </p>
             </div>
           </Reveal>
